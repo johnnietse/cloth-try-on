@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: flask-app
+    env: python
+    buildCommand: ""
+    startCommand: gunicorn -w 4 -b 0.0.0.0:5000 app:app
+    plan: free
+    envVars:
+      - key: DB_NAME
+        fromDatabase: your-database-name
+      - key: DB_USER
+        fromDatabase: your-database-user
+      - key: DB_PASSWORD
+        fromDatabase: your-database-password
+      - key: DB_HOST
+        fromDatabase: your-database-host
+      - key: DB_PORT
+        value: "5432"
+databases:
+  - name: video_app_db
+    plan: free
+    postgresVersion: 13

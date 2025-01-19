@@ -5,8 +5,16 @@ import cvzone
 from cvzone.PoseModule import PoseDetector
 from datetime import datetime
 import numpy as np
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from dotenv import load_dotenv
+
 
 app = Flask(__name__)
+
+
+
+
 UPLOAD_FOLDER = "static/uploads"
 PROCESSED_FOLDER = "static/processed"
 SHIRT_FOLDER = "Resources/Shirts"  # Directory for shirts
@@ -19,18 +27,17 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(PROCESSED_FOLDER, exist_ok=True)
 os.makedirs(SHIRT_FOLDER, exist_ok=True)
 
-
 def get_shirt_list():
     """Fetch the list of shirt images dynamically from the directory."""
     return os.listdir(app.config['SHIRT_FOLDER'])
-
 
 @app.route('/')
 def index():
     # Render the index page with the list of available shirts
     listShirts = get_shirt_list()
     return render_template('index.html', shirts=listShirts)
-
+    # return send_from_directory(app.config['SHIRT_FOLDER'], 'index.html')
+    # return send_from_directory('templates', 'index.html')
 
 @app.route('/upload_shirt', methods=['POST'])
 def upload_shirt():
@@ -47,7 +54,6 @@ def upload_shirt():
         filepath = os.path.join(app.config['SHIRT_FOLDER'], file.filename)
         file.save(filepath)
         return redirect(url_for('index'))  # Redirect back to the home page to display the updated list
-
 
 @app.route('/upload', methods=['POST'])
 def upload_video():
@@ -77,7 +83,6 @@ def upload_video():
             "message": "Video processing complete! Click the link below to download.",
             "download_url": processed_url
         })
-
 
 def process_video(input_path, filename, shirt_index):
     """
@@ -172,7 +177,6 @@ def process_video(input_path, filename, shirt_index):
     out.release()
     return f"{PROCESSED_FOLDER}/{processed_filename}"
 
-
 def overlay_transparent(background, overlay, alpha_blend=0.7):
     """
     Overlay a transparent image (shirt) onto a background.
@@ -194,60 +198,9 @@ def overlay_transparent(background, overlay, alpha_blend=0.7):
 
     return background
 
-
 @app.route('/<path:filepath>')
 def download_file(filepath):
     return send_from_directory('.', filepath)
 
-
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
