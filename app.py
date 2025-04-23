@@ -55,34 +55,36 @@ def upload_shirt():
         file.save(filepath)
         return redirect(url_for('index'))  # Redirect back to the home page to display the updated list
 
+
 @app.route('/upload', methods=['POST'])
 def upload_video():
-    """
-    Upload and process a video.
-    """
-    if 'file' not in request.files:
-        return jsonify({"error": "No file part"}), 400
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({"error": "No selected file"}), 400
-    if file:
-        # Generate a unique filename using a timestamp
+    try:
+        if 'file' not in request.files:
+            return jsonify({"error": "No file part"}), 400
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({"error": "No selected file"}), 400
+
+        # Save video
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        original_filename = file.filename
-        filename = f"{timestamp}_{original_filename}"
+        filename = f"{timestamp}_{file.filename}"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
-        # Get selected shirt index
+        # Shirt index
         shirt_index = int(request.form.get('shirt_index', 0))
         processed_filepath = process_video(filepath, filename, shirt_index)
         processed_url = f"/{processed_filepath}"
 
-        # Return a JSON response with the processed file link
         return jsonify({
             "message": "Video processing complete! Click the link below to download.",
             "download_url": processed_url
         })
+
+    except Exception as e:
+        print("Error in /upload route:", e)
+        return jsonify({"error": str(e)}), 500
+
 
 def process_video(input_path, filename, shirt_index):
     """
