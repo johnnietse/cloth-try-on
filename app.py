@@ -230,11 +230,11 @@ app = Flask(__name__)
 # Database configuration
 def get_db_connection():
     conn = psycopg2.connect(
-        host=os.getenv('DB_HOST'),
-        database=os.getenv('DB_NAME'),
-        user=os.getenv('DB_USER'),
-        password=os.getenv('DB_PASSWORD'),
-        port=os.getenv('DB_PORT')
+        host=os.getenv('dpg-d03frmadbo4c738bml5g-a'),
+        database=os.getenv('conference_db_7rej'),
+        user=os.getenv('conference_db_7rej_user'),
+        password=os.getenv('SfCIq9wras1ApfLgGrQcayRy5igtvG7R'),
+        port=os.getenv('5432')
     )
     return conn
 
