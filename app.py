@@ -208,8 +208,8 @@
 #     app.run(debug=True)
 
 
-from flask import Flask, request, render_template, send_from_directory, jsonify, redirect, url_for, send_file
-import os
+# app.py
+from flask import Flask, request, render_template, jsonify, redirect, url_for, send_file
 import cv2
 import cvzone
 from cvzone.PoseModule import PoseDetector
@@ -217,24 +217,21 @@ from datetime import datetime
 import numpy as np
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from dotenv import load_dotenv
 import io
 from werkzeug.utils import secure_filename
-
-# Load environment variables
-load_dotenv()
+import os
 
 app = Flask(__name__)
 
 
-# Database configuration
+# Database configuration for Render
 def get_db_connection():
     conn = psycopg2.connect(
-        host=os.getenv('dpg-d03frmadbo4c738bml5g-a'),
-        database=os.getenv('conference_db_7rej'),
-        user=os.getenv('conference_db_7rej_user'),
-        password=os.getenv('SfCIq9wras1ApfLgGrQcayRy5igtvG7R'),
-        port=os.getenv('5432')
+        host=os.getenv('DB_HOST'),
+        database=os.getenv('DB_NAME'),
+        user=os.getenv('DB_USER'),
+        password=os.getenv('DB_PASSWORD'),
+        port=os.getenv('DB_PORT')
     )
     return conn
 
@@ -244,7 +241,6 @@ def init_db():
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # Create shirts table if not exists
     cur.execute("""
         CREATE TABLE IF NOT EXISTS shirts (
             id SERIAL PRIMARY KEY,
@@ -254,7 +250,6 @@ def init_db():
         )
     """)
 
-    # Create processed_videos table if not exists
     cur.execute("""
         CREATE TABLE IF NOT EXISTS processed_videos (
             id SERIAL PRIMARY KEY,
@@ -277,7 +272,6 @@ init_db()
 
 @app.route('/')
 def index():
-    # Get list of shirts from database
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute("SELECT id, filename FROM shirts ORDER BY uploaded_at DESC")
@@ -305,7 +299,7 @@ def upload_shirt():
         cur = conn.cursor()
         cur.execute(
             "INSERT INTO shirts (filename, content) VALUES (%s, %s) RETURNING id",
-            (filename, psycopg2.Binary(content))
+            (filename, psycopg2.Binary(content)))
         shirt_id = cur.fetchone()[0]
         conn.commit()
         cur.close()
@@ -327,7 +321,7 @@ def get_shirt(shirt_id):
         filename, content = shirt
         return send_file(
             io.BytesIO(content),
-            mimetype='image/png',  # Adjust based on actual image type
+            mimetype='image/png',
             as_attachment=False,
             download_name=filename
         )
@@ -344,17 +338,12 @@ def upload_video():
         if file.filename == '':
             return jsonify({"error": "No selected file"}), 400
 
-        # Read video content
         video_content = file.read()
         original_filename = secure_filename(file.filename)
-
-        # Get shirt ID
         shirt_id = int(request.form.get('shirt_id', 0))
 
-        # Process video (this will now return the processed video content)
         processed_content, processed_filename = process_video_in_memory(video_content, original_filename, shirt_id)
 
-        # Save processed video to database
         conn = get_db_connection()
         cur = conn.cursor()
         cur.execute(
@@ -371,115 +360,102 @@ def upload_video():
         })
 
     except Exception as e:
-        print("Error in /upload route:", e)
+        app.logger.error(f"Error in /upload route: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
 def process_video_in_memory(video_content, original_filename, shirt_id):
-    """Process video entirely in memory without filesystem access"""
     detector = PoseDetector()
 
-    # Convert bytes to numpy array
-    nparr = np.frombuffer(video_content, np.uint8)
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT filename, content FROM shirts WHERE id = %s", (shirt_id,))
+    shirt = cur.fetchone()
+    cur.close()
+    conn.close()
 
-    # Create a temporary file-like object for OpenCV
-    temp_video = io.BytesIO(video_content)
+    if not shirt:
+        raise ValueError("Shirt not found")
 
-    # For video processing, we need to use a temporary file or find another approach
-    # This is a limitation of OpenCV's VideoCapture which typically needs a filesystem path
-    # As a workaround, we'll write to a temporary file (but this is not ideal for production)
+    shirt_filename, shirt_content = shirt
+    imgShirt = cv2.imdecode(np.frombuffer(shirt_content, np.uint8), cv2.IMREAD_UNCHANGED)
+
+    # Use temporary files for video processing (Render allows tmp files)
     import tempfile
-    with tempfile.NamedTemporaryFile(delete=True) as temp_file:
-        temp_file.write(video_content)
-        temp_file.flush()
-        cap = cv2.VideoCapture(temp_file.name)
+    with tempfile.NamedTemporaryFile(suffix='.mp4') as temp_input, \
+            tempfile.NamedTemporaryFile(suffix='.mp4') as temp_output:
 
-        # Get shirt from database
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT filename, content FROM shirts WHERE id = %s", (shirt_id,))
-        shirt = cur.fetchone()
-        cur.close()
-        conn.close()
+        # Write input video to temp file
+        temp_input.write(video_content)
+        temp_input.flush()
 
-        if not shirt:
-            raise ValueError("Shirt not found")
-
-        shirt_filename, shirt_content = shirt
-        imgShirt = cv2.imdecode(np.frombuffer(shirt_content, np.uint8), cv2.IMREAD_UNCHANGED)
-
-        # Prepare to save processed video in memory
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        cap = cv2.VideoCapture(temp_input.name)
         frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-        # Create a BytesIO buffer to store the video
-        video_buffer = io.BytesIO()
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out = cv2.VideoWriter(temp_output.name, fourcc, 30.0, (frame_width, frame_height))
 
-        # We can't directly write to BytesIO with VideoWriter, so we'll use a temporary file again
-        with tempfile.NamedTemporaryFile(suffix='.mp4', delete=True) as temp_out_file:
-            out = cv2.VideoWriter(temp_out_file.name, fourcc, 30.0, (frame_width, frame_height))
+        while True:
+            success, img = cap.read()
+            if not success:
+                break
 
-            while True:
-                success, img = cap.read()
-                if not success:
-                    break
+            img = detector.findPose(img)
+            lmList, bboxInfo = detector.findPosition(img, bboxWithHands=False, draw=False)
 
-                img = detector.findPose(img)
-                lmList, bboxInfo = detector.findPosition(img, bboxWithHands=False, draw=False)
+            if lmList and len(lmList) > 24:
+                left_shoulder = np.array(lmList[11][1:3])
+                right_shoulder = np.array(lmList[12][1:3])
+                left_hip = np.array(lmList[23][1:3])
+                right_hip = np.array(lmList[24][1:3])
 
-                if lmList and len(lmList) > 24:
-                    left_shoulder = np.array(lmList[11][1:3])
-                    right_shoulder = np.array(lmList[12][1:3])
-                    left_hip = np.array(lmList[23][1:3])
-                    right_hip = np.array(lmList[24][1:3])
+                center_x = (left_shoulder[0] + right_shoulder[0] + left_hip[0] + right_hip[0]) / 4
+                center_y = (left_shoulder[1] + right_shoulder[1] + left_hip[1] + right_hip[1]) / 4
 
-                    center_x = (left_shoulder[0] + right_shoulder[0] + left_hip[0] + right_hip[0]) / 4
-                    center_y = (left_shoulder[1] + right_shoulder[1] + left_hip[1] + right_hip[1]) / 4
+                scaling_factor = 1.5
+                shoulder_width = abs(left_shoulder[0] - right_shoulder[0]) * scaling_factor
+                hip_height = abs(left_hip[1] - left_shoulder[1]) * scaling_factor
 
-                    scaling_factor = 1.5
-                    shoulder_width = abs(left_shoulder[0] - right_shoulder[0]) * scaling_factor
-                    hip_height = abs(left_hip[1] - left_shoulder[1]) * scaling_factor
+                left_shoulder[0] = center_x - shoulder_width / 2
+                right_shoulder[0] = center_x + shoulder_width / 2
+                left_shoulder[1] = center_y - hip_height / 2
+                right_shoulder[1] = center_y - hip_height / 2
+                left_hip[0] = center_x - shoulder_width / 2
+                right_hip[0] = center_x + shoulder_width / 2
+                left_hip[1] = center_y + hip_height / 2
+                right_hip[1] = center_y + hip_height / 2
 
-                    left_shoulder[0] = center_x - shoulder_width / 2
-                    right_shoulder[0] = center_x + shoulder_width / 2
-                    left_shoulder[1] = center_y - hip_height / 2
-                    right_shoulder[1] = center_y - hip_height / 2
-                    left_hip[0] = center_x - shoulder_width / 2
-                    right_hip[0] = center_x + shoulder_width / 2
-                    left_hip[1] = center_y + hip_height / 2
-                    right_hip[1] = center_y + hip_height / 2
+                height, width = imgShirt.shape[:2]
+                source_pts = np.float32([
+                    [0, 0],
+                    [width, 0],
+                    [width, height],
+                    [0, height]
+                ])
 
-                    height, width = imgShirt.shape[:2]
-                    source_pts = np.float32([
-                        [0, 0],
-                        [width, 0],
-                        [width, height],
-                        [0, height]
-                    ])
+                collar_offset = 30
+                target_pts = np.float32([
+                    [left_shoulder[0], left_shoulder[1] + collar_offset],
+                    [right_shoulder[0], right_shoulder[1] + collar_offset],
+                    [right_hip[0], right_hip[1]],
+                    [left_hip[0], left_hip[1]]
+                ])
 
-                    collar_offset = 30
-                    target_pts = np.float32([
-                        [left_shoulder[0], left_shoulder[1] + collar_offset],
-                        [right_shoulder[0], right_shoulder[1] + collar_offset],
-                        [right_hip[0], right_hip[1]],
-                        [left_hip[0], left_hip[1]]
-                    ])
+                matrix = cv2.getPerspectiveTransform(source_pts, target_pts)
+                warped_shirt = cv2.warpPerspective(imgShirt, matrix, (img.shape[1], img.shape[0]),
+                                                   borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
 
-                    matrix = cv2.getPerspectiveTransform(source_pts, target_pts)
-                    warped_shirt = cv2.warpPerspective(imgShirt, matrix, (img.shape[1], img.shape[0]),
-                                                       borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
+                img = overlay_transparent(img, warped_shirt)
 
-                    img = overlay_transparent(img, warped_shirt)
+            out.write(img)
 
-                out.write(img)
+        cap.release()
+        out.release()
 
-            cap.release()
-            out.release()
-
-            # Read the processed video back into memory
-            with open(temp_out_file.name, 'rb') as f:
-                processed_content = f.read()
+        # Read the processed video back into memory
+        with open(temp_output.name, 'rb') as f:
+            processed_content = f.read()
 
     processed_filename = f"processed_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{original_filename}"
 
@@ -507,7 +483,6 @@ def download_video(video_id):
 
 
 def overlay_transparent(background, overlay, alpha_blend=0.7):
-    """Overlay a transparent image (shirt) onto a background."""
     b, g, r, a = cv2.split(overlay)
     green_mask = (g > 150) & (r < 100) & (b < 100)
     a[green_mask] = 0
@@ -520,4 +495,4 @@ def overlay_transparent(background, overlay, alpha_blend=0.7):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
