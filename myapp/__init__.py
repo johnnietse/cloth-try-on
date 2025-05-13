@@ -214,28 +214,26 @@
 
 import os
 from flask import Flask
-from .extensions import db
 
 
 def create_app():
     app = Flask(__name__)
 
     # Configure database
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    database_url = os.environ.get('DATABASE_URL')
 
-    # Configure file uploads
-    app.config['UPLOAD_FOLDER'] = 'static/uploads'
-    app.config['PROCESSED_FOLDER'] = 'static/processed'
-    app.config['SHIRT_FOLDER'] = 'static/Resources/Shirts'
+    # Fix for Render's PostgreSQL URL format if needed
+    if database_url and database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
 
-    # Ensure directories exist
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-    os.makedirs(app.config['PROCESSED_FOLDER'], exist_ok=True)
-    os.makedirs(app.config['SHIRT_FOLDER'], exist_ok=True)
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+    # Initialize extensions
+    from .extensions import db
     db.init_app(app)
 
+    # Register blueprints
     from .routes import main
     app.register_blueprint(main)
 
