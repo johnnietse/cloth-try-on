@@ -214,7 +214,7 @@
 
 import os
 from flask import Flask
-from extensions import db
+from .extensions import db
 
 
 def create_app():
