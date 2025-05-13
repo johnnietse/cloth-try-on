@@ -1,17 +1,40 @@
-#services:
-#  - type: web
-#    name: virtual-try-on
-#    runtime: python
-#    buildCommand: pip install -r requirements.txt
-#    startCommand: gunicorn run:app
-#    envVars:
-#      - key: DATABASE_URL
-#        fromDatabase:
-#          name: virtual_try_on_db
-#          property: connectionString
-#      - key: PYTHON_VERSION
-#        value: 3.9.13
-
+##services:
+##  - type: web
+##    name: virtual-try-on
+##    runtime: python
+##    buildCommand: pip install -r requirements.txt
+##    startCommand: gunicorn run:app
+##    envVars:
+##      - key: DATABASE_URL
+##        fromDatabase:
+##          name: virtual_try_on_db
+##          property: connectionString
+##      - key: PYTHON_VERSION
+##        value: 3.9.13
+#
+##services:
+##  - type: web
+##    name: virtual-try-on
+##    runtime: python
+##    buildCommand: |
+##      pip install -r requirements.txt
+##      python -m flask init-db
+##    startCommand: gunicorn run:app  # Changed from 'app:app' to 'run:app'
+##    envVars:
+##      - key: DATABASE_URL
+##        value: /opt/render/project/src  # Add this line
+##
+##        fromDatabase:
+##          name: virtual_try_on_db
+##          property: connectionString
+##      - key: PYTHON_VERSION
+##        value: 3.9.13
+##
+##databases:
+##  - name: virtual_try_on_db
+##    plan: free
+#
+#
 #services:
 #  - type: web
 #    name: virtual-try-on
@@ -19,11 +42,9 @@
 #    buildCommand: |
 #      pip install -r requirements.txt
 #      python -m flask init-db
-#    startCommand: gunicorn run:app  # Changed from 'app:app' to 'run:app'
+#    startCommand: gunicorn run:app
 #    envVars:
 #      - key: DATABASE_URL
-#        value: /opt/render/project/src  # Add this line
-#
 #        fromDatabase:
 #          name: virtual_try_on_db
 #          property: connectionString
@@ -33,24 +54,3 @@
 #databases:
 #  - name: virtual_try_on_db
 #    plan: free
-
-
-services:
-  - type: web
-    name: virtual-try-on
-    runtime: python
-    buildCommand: |
-      pip install -r requirements.txt
-      python -m flask init-db
-    startCommand: gunicorn run:app
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase:
-          name: virtual_try_on_db
-          property: connectionString
-      - key: PYTHON_VERSION
-        value: 3.9.13
-
-databases:
-  - name: virtual_try_on_db
-    plan: free
