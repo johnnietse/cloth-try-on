@@ -19,8 +19,8 @@
 
 
 from flask import Blueprint, request, render_template, send_from_directory, jsonify, redirect, url_for
-from myapp.models import VideoUpload
-from myapp.extensions import db
+from .models import VideoUpload
+from .extensions import db
 import os
 import cv2
 import numpy as np
