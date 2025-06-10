@@ -9,13 +9,13 @@ services:
       - ./:/app
       - uploads:/app/static/uploads
       - processed:/app/static/processed
-      - shirts:/app/Resources/Shirts
+      - shirts:/app/Resources/shirts
       - logs:/app/logs
     environment:
       - FLASK_DEBUG=true
       - UPLOAD_FOLDER=/app/static/uploads
       - PROCESSED_FOLDER=/app/static/processed
-      - SHIRT_FOLDER=/app/Resources/Shirts
+      - SHIRT_FOLDER=/app/Resources/shirts
     depends_on:
       - db
 
