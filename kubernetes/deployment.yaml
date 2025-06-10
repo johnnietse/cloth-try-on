@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: virtual-tryon-app
+  labels:
+    app: virtual-tryon
+spec:
+  replicas: 3
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: virtual-tryon
+  template:
+    metadata:
+      labels:
+        app: virtual-tryon
+    spec:
+      containers:
+      - name: virtual-tryon
+        image: your-docker-repo/virtual-tryon-app:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5000
+        env:
+        - name: FLASK_ENV
+          value: "production"
+        - name: UPLOAD_FOLDER
+          value: "/app/static/uploads"
+        - name: PROCESSED_FOLDER
+          value: "/app/static/processed"
+        - name: SHIRT_FOLDER
+          value: "/app/Resources/Shirts"
+        - name: DB_HOST
+          value: "virtual-tryon-db"
+        - name: DB_NAME
+          value: "virtual_tryon"
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: username
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: password
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "1000m"
+            memory: "1Gi"
+        volumeMounts:
+        - name: uploads-volume
+          mountPath: "/app/static/uploads"
+        - name: processed-volume
+          mountPath: "/app/static/processed"
+        - name: shirts-volume
+          mountPath: "/app/Resources/Shirts"
+        - name: logs-volume
+          mountPath: "/app/logs"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 2
+          failureThreshold: 1
+      volumes:
+      - name: uploads-volume
+        persistentVolumeClaim:
+          claimName: uploads-pvc
+      - name: processed-volume
+        persistentVolumeClaim:
+          claimName: processed-pvc
+      - name: shirts-volume
+        persistentVolumeClaim:
+          claimName: shirts-pvc
+      - name: logs-volume
+        emptyDir: {}

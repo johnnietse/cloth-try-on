@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  webapp:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./:/app
+      - uploads:/app/static/uploads
+      - processed:/app/static/processed
+      - shirts:/app/Resources/Shirts
+      - logs:/app/logs
+    environment:
+      - FLASK_DEBUG=true
+      - UPLOAD_FOLDER=/app/static/uploads
+      - PROCESSED_FOLDER=/app/static/processed
+      - SHIRT_FOLDER=/app/Resources/Shirts
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=virtual_tryon
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  uploads:
+  processed:
+  shirts:
+  logs:
+  postgres_data:
