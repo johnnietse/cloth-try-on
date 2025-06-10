@@ -214,6 +214,8 @@
 
 
 ################################################################################################
+
+
 import os
 import cv2
 import cvzone
@@ -225,6 +227,18 @@ from psycopg2.extras import RealDictCursor
 from dotenv import load_dotenv
 import logging
 from logging.handlers import RotatingFileHandler
+
+
+# Workaround for OpenCV typing issues
+import numpy as np
+np.int = int
+np.float = float
+np.bool = bool
+
+# Workaround for cv2.dnn.DictValue
+import cv2
+if not hasattr(cv2.dnn, 'DictValue'):
+    cv2.dnn.DictValue = type('DictValue', (), {})
 
 # Load environment variables
 load_dotenv()
