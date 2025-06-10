@@ -54,3 +54,35 @@
 #databases:
 #  - name: virtual_try_on_db
 #    plan: free
+
+
+
+
+services:
+  - type: web
+    name: virtual-try-on
+    env: python
+    region: virginia
+    plan: free  # or standard for production
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+    envVars:
+      - key: FLASK_APP
+        value: app.py
+      - key: FLASK_ENV
+        value: production
+      - key: UPLOAD_FOLDER
+        value: /var/data/uploads
+      - key: PROCESSED_FOLDER
+        value: /var/data/processed
+      - key: SHIRT_FOLDER
+        value: /var/data/Resources/Shirts
+    disk:
+      name: app-data
+      mountPath: /var/data
+      sizeGB: 1
+
+databases:
+  - name: virtualtryon-db
+    plan: free  # or starter/production for real usage
+    region: virginia
