@@ -33,7 +33,7 @@ spec:
         - name: PROCESSED_FOLDER
           value: "/app/static/processed"
         - name: SHIRT_FOLDER
-          value: "/app/Resources/Shirts"
+          value: "/app/Resources/shirts"
         - name: DB_HOST
           value: "virtual-tryon-db"
         - name: DB_NAME
@@ -61,7 +61,7 @@ spec:
         - name: processed-volume
           mountPath: "/app/static/processed"
         - name: shirts-volume
-          mountPath: "/app/Resources/Shirts"
+          mountPath: "/app/Resources/shirts"
         - name: logs-volume
           mountPath: "/app/logs"
         livenessProbe:

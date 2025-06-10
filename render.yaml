@@ -76,7 +76,7 @@ services:
       - key: PROCESSED_FOLDER
         value: /var/data/processed
       - key: SHIRT_FOLDER
-        value: /var/data/Resources/Shirts
+        value: /var/data/Resources/shirts
     disk:
       name: app-data
       mountPath: /var/data
