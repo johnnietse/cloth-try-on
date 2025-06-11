@@ -81,12 +81,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Upload the video to the server
-            const uploadResponse = await fetch('/upload', {
-                method: 'POST',
-                body: formData
+//            const uploadResponse = await fetch('/upload', {
+//                method: 'POST',
+//                body: formData
+//            });
+//
+//            const data = await uploadResponse.json();
+
+            const response = await fetch('/upload', {
+              method: 'POST',
+              body: formData
             });
 
-            const data = await uploadResponse.json();
+            if (!response.ok) {
+              const error = await response.json().catch(() => ({ error: "Unknown error" }));
+              throw new Error(error.message || "Upload failed");
+            }
+
+            const data = await response.json();
+            console.log("Backend response:", data);  // Debugging
+            if (data.status === "error") throw new Error(data.error);
+
             uploadedVideoPath = data.filePath;
 
             // Notify user about the video upload
