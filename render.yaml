@@ -72,11 +72,15 @@ services:
       - key: FLASK_ENV
         value: production
       - key: UPLOAD_FOLDER
-        value: /var/data/uploads
+        value: /opt/render/project/src/static/uploads
       - key: PROCESSED_FOLDER
-        value: /var/data/processed
+        value: /opt/render/project/src/static/processed
+#      - key: SHIRT_FOLDER
+#        value: /var/data/Resources/shirts
       - key: SHIRT_FOLDER
-        value: /var/data/Resources/shirts
+        value: /opt/render/project/src/static/shirts
+      - key: PYTHON_VERSION
+        value: 3.10.13  # Match your runtime
     disk:
       name: app-data
       mountPath: /var/data

@@ -533,13 +533,21 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Get base directory
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# # Get base directory
+# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+#
+# # Configure paths - using relative paths from the base directory
+# UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', os.path.join(BASE_DIR, 'static', 'uploads'))
+# PROCESSED_FOLDER = os.getenv('PROCESSED_FOLDER', os.path.join(BASE_DIR, 'static', 'processed'))
+# SHIRT_FOLDER = os.getenv('SHIRT_FOLDER', os.path.join(BASE_DIR, 'static', 'shirts'))
 
-# Configure paths - using relative paths from the base directory
-UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', os.path.join(BASE_DIR, 'static', 'uploads'))
-PROCESSED_FOLDER = os.getenv('PROCESSED_FOLDER', os.path.join(BASE_DIR, 'static', 'processed'))
-SHIRT_FOLDER = os.getenv('SHIRT_FOLDER', os.path.join(BASE_DIR, 'static', 'shirts'))
+
+# Configure paths - use relative paths
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
+PROCESSED_FOLDER = os.path.join(BASE_DIR, 'static', 'processed')
+SHIRT_FOLDER = os.path.join(BASE_DIR, 'static', 'shirts')
+
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['PROCESSED_FOLDER'] = PROCESSED_FOLDER
@@ -629,6 +637,9 @@ def overlay_transparent(background, overlay, alpha_blend=0.7):
 
 def process_video(input_path, filename, shirt_index):
     """Process the uploaded video and overlay the selected shirt."""
+    cap = cv2.VideoCapture(input_path)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)  # Reduce resolution
+    cap.set(cv2.CAP_PROP_FPS, 15)           # Reduce FPS
     try:
         detector = PoseDetector()
         cap = cv2.VideoCapture(input_path)
@@ -797,16 +808,25 @@ def upload_video():
             shirt_index = 0
 
         processed_filepath = process_video(filepath, filename, shirt_index)
-        processed_url = url_for('download_processed', filename=os.path.basename(processed_filepath))
-
         return jsonify({
-            "message": "Video processing complete!",
-            "download_url": processed_url
+            "message": "Success",
+            "download_url": url_for('download_processed', filename=os.path.basename(processed_filepath))
         })
-
     except Exception as e:
-        app.logger.error(f"Video upload failed: {str(e)}")
-        return jsonify({"error": "Video processing failed"}), 500
+        app.logger.error(f"CRASH: {str(e)}")  # Check Render logs for this
+        return jsonify({"error": "Processing failed", "details": str(e)}), 500
+
+    #     processed_filepath = process_video(filepath, filename, shirt_index)
+    #     processed_url = url_for('download_processed', filename=os.path.basename(processed_filepath))
+    #
+    #     return jsonify({
+    #         "message": "Video processing complete!",
+    #         "download_url": processed_url
+    #     })
+    #
+    # except Exception as e:
+    #     app.logger.error(f"Video upload failed: {str(e)}")
+    #     return jsonify({"error": "Video processing failed"}), 500
 
 @app.route('/processed/<filename>')
 def download_processed(filename):
