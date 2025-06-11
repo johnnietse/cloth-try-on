@@ -510,7 +510,7 @@ import os
 import cv2
 import cvzone
 import numpy as np
-from datetime import datetime
+from datetime import datetime, time
 from flask import Flask, request, render_template, send_from_directory, jsonify, redirect, url_for, abort
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -807,15 +807,25 @@ def upload_video():
         except:
             shirt_index = 0
 
-        processed_filepath = process_video(filepath, filename, shirt_index)
-        return jsonify({
-            "message": "Success",
-            "download_url": url_for('download_processed', filename=os.path.basename(processed_filepath))
-        })
-    except Exception as e:
-        app.logger.error(f"CRASH: {str(e)}")  # Check Render logs for this
-        return jsonify({"error": "Processing failed", "details": str(e)}), 500
+            # Add timeout check
+            start_time = time.time()
+            processed_filepath = process_video(filepath, filename, shirt_index)
 
+            if time.time() - start_time > 25:  # Warn if close to Render's 30s timeout
+                app.logger.warning("Video processing nearly timed out!")
+
+            return jsonify({
+                "status": "success",
+                "download_url": url_for('download_processed', filename=os.path.basename(processed_filepath))
+            })
+
+    except Exception as e:
+        app.logger.error(f"VIDEO PROCESSING CRASHED: {str(e)}", exc_info=True)
+        return jsonify({
+            "status": "error",
+            "error": "Processing failed",
+            "details": str(e) if os.getenv('FLASK_DEBUG') == 'true' else None
+        }), 500
     #     processed_filepath = process_video(filepath, filename, shirt_index)
     #     processed_url = url_for('download_processed', filename=os.path.basename(processed_filepath))
     #

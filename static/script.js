@@ -90,7 +90,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const response = await fetch('/upload', {
               method: 'POST',
-              body: formData
+              body: formData,
+              signal: AbortSignal.timeout(250000)
             });
 
             if (!response.ok) {
