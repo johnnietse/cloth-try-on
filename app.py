@@ -548,7 +548,7 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
 PROCESSED_FOLDER = os.path.join(BASE_DIR, 'static', 'processed')
-SHIRT_FOLDER = os.path.join(BASE_DIR, 'static', 'shirts')
+SHIRT_FOLDER = os.path.join(BASE_DIR, 'Resources', 'shirts')
 
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -955,12 +955,13 @@ def upload_video():
 
             return jsonify({
                 "status": "success",
+                "message": "Video processing complete!",
                 "download_url": url_for('download_processed',
                                         filename=os.path.basename(processed_path))
             })
         except Exception as e:
             app.logger.error(f"Processing crashed: {str(e)}")
-            return jsonify({"status": "error", "error": "Video processing failed"}), 500
+            return jsonify({"status": "error", "error": "Video processing failed",             "details": str(e) if app.debug else None}), 500
 
     except Exception as e:
         app.logger.error(f"Unexpected upload error: {str(e)}")
