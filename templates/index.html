@@ -245,7 +245,7 @@
                     <div class="col-6 col-md-4 col-lg-3 text-center mt-3">
                         <label>
                             <input type="radio" name="shirt_index" value="{{ loop.index0 }}" {% if loop.index0 == 0 %}checked{% endif %} hidden>
-                            <img src="/Resources/Shirts/{{ shirt }}" alt="{{ shirt }}" class="img-fluid shirt-image {% if loop.index0 == 0 %}selected{% endif %}">
+                            <img src="{{ url_for('serve_shirt', filename=shirt) }}" alt="{{ shirt }}" class="img-fluid shirt-image {% if loop.index0 == 0 %}selected{% endif %}">
                         </label>
                     </div>
                     {% endfor %}

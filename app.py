@@ -518,6 +518,8 @@ from dotenv import load_dotenv
 import logging
 from logging.handlers import RotatingFileHandler
 from cvzone.PoseModule import PoseDetector
+import time  # NEW IMPORT
+from werkzeug.utils import secure_filename
 
 # Workaround for OpenCV typing issues
 np.int = int
@@ -558,7 +560,14 @@ for folder in [UPLOAD_FOLDER, PROCESSED_FOLDER, SHIRT_FOLDER]:
     try:
         os.makedirs(folder, exist_ok=True)
         app.logger.info(f"Directory created or exists: {folder}")
+        test_file = os.path.join(folder, 'permission_test.txt')
+        with open(test_file, 'w') as f:
+            f.write('test')
+        os.remove(test_file)
+
+
     except Exception as e:
+        logging.error(f"FOLDER PERMISSION ERROR: {folder} - {str(e)}")
         app.logger.error(f"Failed to create directory {folder}: {str(e)}")
         # Fallback to a simpler directory if needed
         if folder == SHIRT_FOLDER:
@@ -635,69 +644,193 @@ def overlay_transparent(background, overlay, alpha_blend=0.7):
         app.logger.error(f"Overlay failed: {str(e)}")
         return background
 
+# def process_video(input_path, filename, shirt_index):
+#     """Process the uploaded video and overlay the selected shirt."""
+#     cap = cv2.VideoCapture(input_path)
+#     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)  # Reduce resolution
+#     cap.set(cv2.CAP_PROP_FPS, 15)           # Reduce FPS
+#     try:
+#         detector = PoseDetector()
+#         cap = cv2.VideoCapture(input_path)
+#         if not cap.isOpened():
+#             raise ValueError("Could not open video file")
+#
+#         # Generate output path
+#         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+#         processed_filename = f"processed_{timestamp}_{filename}"
+#         processed_path = os.path.join(app.config['PROCESSED_FOLDER'], processed_filename)
+#
+#         # Get video properties
+#         frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+#         frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+#         fps = cap.get(cv2.CAP_PROP_FPS)
+#
+#         # Video writer to save the output
+#         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+#         out = cv2.VideoWriter(processed_path, fourcc, fps, (frame_width, frame_height))
+#
+#         listShirts = get_shirt_list()
+#         if not listShirts:
+#             raise ValueError("No shirts available for processing")
+#
+#         while True:
+#             success, img = cap.read()
+#             if not success:
+#                 break
+#
+#             img = detector.findPose(img)
+#             lmList, bboxInfo = detector.findPosition(img, bboxWithHands=False, draw=False)
+#
+#             if lmList and len(lmList) > 24:
+#                 # Load the shirt image
+#                 shirt_path = os.path.join(app.config['SHIRT_FOLDER'], listShirts[shirt_index])
+#                 imgShirt = cv2.imread(shirt_path, cv2.IMREAD_UNCHANGED)
+#                 if imgShirt is None:
+#                     app.logger.error(f"Failed to load shirt image: {shirt_path}")
+#                     continue
+#
+#                 # Extract keypoints for shoulders and hips
+#                 left_shoulder = np.array(lmList[11][1:3])
+#                 right_shoulder = np.array(lmList[12][1:3])
+#                 left_hip = np.array(lmList[23][1:3])
+#                 right_hip = np.array(lmList[24][1:3])
+#
+#                 # Calculate the center of the bounding box
+#                 center_x = (left_shoulder[0] + right_shoulder[0] + left_hip[0] + right_hip[0]) / 4
+#                 center_y = (left_shoulder[1] + right_shoulder[1] + left_hip[1] + right_hip[1]) / 4
+#
+#                 # Define a scaling factor to expand the bounding box
+#                 scaling_factor = 1.5
+#
+#                 # Calculate distances to expand the box
+#                 shoulder_width = abs(left_shoulder[0] - right_shoulder[0]) * scaling_factor
+#                 hip_height = abs(left_hip[1] - left_shoulder[1]) * scaling_factor
+#
+#                 # Adjust the bounding box
+#                 left_shoulder[0] = center_x - shoulder_width / 2
+#                 right_shoulder[0] = center_x + shoulder_width / 2
+#                 left_shoulder[1] = center_y - hip_height / 2
+#                 right_shoulder[1] = center_y - hip_height / 2
+#                 left_hip[0] = center_x - shoulder_width / 2
+#                 right_hip[0] = center_x + shoulder_width / 2
+#                 left_hip[1] = center_y + hip_height / 2
+#                 right_hip[1] = center_y + hip_height / 2
+#
+#                 # Define the source quadrilateral (full shirt image)
+#                 height, width = imgShirt.shape[:2]
+#                 source_pts = np.float32([
+#                     [0, 0],
+#                     [width, 0],
+#                     [width, height],
+#                     [0, height]
+#                 ])
+#
+#                 # Define the target quadrilateral
+#                 collar_offset = 30
+#                 target_pts = np.float32([
+#                     [left_shoulder[0], left_shoulder[1] + collar_offset],
+#                     [right_shoulder[0], right_shoulder[1] + collar_offset],
+#                     [right_hip[0], right_hip[1]],
+#                     [left_hip[0], left_hip[1]]
+#                 ])
+#
+#                 # Compute the perspective transform matrix
+#                 matrix = cv2.getPerspectiveTransform(source_pts, target_pts)
+#
+#                 # Warp the shirt image
+#                 warped_shirt = cv2.warpPerspective(
+#                     imgShirt, matrix, (img.shape[1], img.shape[0]),
+#                     borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0)
+#                 )
+#
+#                 img = overlay_transparent(img, warped_shirt)
+#
+#
+#
+#
+#
+#             out.write(img)
+#
+#         cap.release()
+#         out.release()
+#         return f"processed/{processed_filename}"
+#
+#     except Exception as e:
+#         app.logger.error(f"Video processing failed: {str(e)}")
+#         raise
+
 def process_video(input_path, filename, shirt_index):
-    """Process the uploaded video and overlay the selected shirt."""
-    cap = cv2.VideoCapture(input_path)
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)  # Reduce resolution
-    cap.set(cv2.CAP_PROP_FPS, 15)           # Reduce FPS
+    """Process the uploaded video and overlay the selected shirt with optimizations."""
+    detector = PoseDetector()
+    cap = None
+    out = None
+
     try:
-        detector = PoseDetector()
+        # Initialize video capture with optimized settings
         cap = cv2.VideoCapture(input_path)
         if not cap.isOpened():
             raise ValueError("Could not open video file")
+
+        # Set processing parameters for Render.com compatibility
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)  # Reduced from 1280
+        cap.set(cv2.CAP_PROP_FPS, 15)  # Reduced from 30
+        frame_skip = 2  # Process every 2nd frame
 
         # Generate output path
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         processed_filename = f"processed_{timestamp}_{filename}"
         processed_path = os.path.join(app.config['PROCESSED_FOLDER'], processed_filename)
 
-        # Get video properties
+        # Get adjusted video properties
         frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        fps = cap.get(cv2.CAP_PROP_FPS)
+        adjusted_fps = cap.get(cv2.CAP_PROP_FPS) / frame_skip
 
-        # Video writer to save the output
+        # Initialize video writer
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        out = cv2.VideoWriter(processed_path, fourcc, fps, (frame_width, frame_height))
+        out = cv2.VideoWriter(processed_path, fourcc, adjusted_fps, (frame_width, frame_height))
 
+        # Verify shirt availability
         listShirts = get_shirt_list()
         if not listShirts:
             raise ValueError("No shirts available for processing")
 
+        # Load shirt image once (outside frame loop)
+        shirt_path = os.path.join(app.config['SHIRT_FOLDER'], listShirts[shirt_index])
+        imgShirt = cv2.imread(shirt_path, cv2.IMREAD_UNCHANGED)
+        if imgShirt is None:
+            raise ValueError(f"Failed to load shirt image: {shirt_path}")
+
+        # Process frames with skipping
+        frame_count = 0
         while True:
             success, img = cap.read()
             if not success:
                 break
 
+            frame_count += 1
+            if frame_count % frame_skip != 0:
+                continue
+
+            # Pose detection
             img = detector.findPose(img)
             lmList, bboxInfo = detector.findPosition(img, bboxWithHands=False, draw=False)
 
             if lmList and len(lmList) > 24:
-                # Load the shirt image
-                shirt_path = os.path.join(app.config['SHIRT_FOLDER'], listShirts[shirt_index])
-                imgShirt = cv2.imread(shirt_path, cv2.IMREAD_UNCHANGED)
-                if imgShirt is None:
-                    app.logger.error(f"Failed to load shirt image: {shirt_path}")
-                    continue
-
-                # Extract keypoints for shoulders and hips
+                # Extract keypoints
                 left_shoulder = np.array(lmList[11][1:3])
                 right_shoulder = np.array(lmList[12][1:3])
                 left_hip = np.array(lmList[23][1:3])
                 right_hip = np.array(lmList[24][1:3])
 
-                # Calculate the center of the bounding box
+                # Calculate bounding box
                 center_x = (left_shoulder[0] + right_shoulder[0] + left_hip[0] + right_hip[0]) / 4
                 center_y = (left_shoulder[1] + right_shoulder[1] + left_hip[1] + right_hip[1]) / 4
-
-                # Define a scaling factor to expand the bounding box
                 scaling_factor = 1.5
-
-                # Calculate distances to expand the box
                 shoulder_width = abs(left_shoulder[0] - right_shoulder[0]) * scaling_factor
                 hip_height = abs(left_hip[1] - left_shoulder[1]) * scaling_factor
 
-                # Adjust the bounding box
+                # Adjust bounding box coordinates
                 left_shoulder[0] = center_x - shoulder_width / 2
                 right_shoulder[0] = center_x + shoulder_width / 2
                 left_shoulder[1] = center_y - hip_height / 2
@@ -707,44 +840,42 @@ def process_video(input_path, filename, shirt_index):
                 left_hip[1] = center_y + hip_height / 2
                 right_hip[1] = center_y + hip_height / 2
 
-                # Define the source quadrilateral (full shirt image)
+                # Perspective transform
                 height, width = imgShirt.shape[:2]
                 source_pts = np.float32([
-                    [0, 0],
-                    [width, 0],
-                    [width, height],
-                    [0, height]
+                    [0, 0], [width, 0],
+                    [width, height], [0, height]
                 ])
-
-                # Define the target quadrilateral
-                collar_offset = 30
                 target_pts = np.float32([
-                    [left_shoulder[0], left_shoulder[1] + collar_offset],
-                    [right_shoulder[0], right_shoulder[1] + collar_offset],
+                    [left_shoulder[0], left_shoulder[1] + 30],  # collar_offset
+                    [right_shoulder[0], right_shoulder[1] + 30],
                     [right_hip[0], right_hip[1]],
                     [left_hip[0], left_hip[1]]
                 ])
 
-                # Compute the perspective transform matrix
                 matrix = cv2.getPerspectiveTransform(source_pts, target_pts)
-
-                # Warp the shirt image
                 warped_shirt = cv2.warpPerspective(
                     imgShirt, matrix, (img.shape[1], img.shape[0]),
-                    borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0)
+                    borderMode=cv2.BORDER_CONSTANT,
+                    borderValue=(0, 0, 0, 0)
                 )
 
                 img = overlay_transparent(img, warped_shirt)
 
             out.write(img)
 
-        cap.release()
-        out.release()
         return f"processed/{processed_filename}"
 
     except Exception as e:
         app.logger.error(f"Video processing failed: {str(e)}")
-        raise
+        raise  # Re-raise to be caught by upload_video()
+
+    finally:
+        # Ensure resources are always released
+        if cap is not None:
+            cap.release()
+        if out is not None:
+            out.release()
 
 @app.route('/')
 def index():
@@ -778,54 +909,157 @@ def upload_shirt():
         app.logger.error(f"Shirt upload failed: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
+
 @app.route('/upload', methods=['POST'])
 def upload_video():
-    """Handle video uploads and processing."""
+    """Handle video uploads with proper error handling"""
     try:
+        # Validate file exists
         if 'file' not in request.files:
-            return jsonify({"error": "No file part"}), 400
+            return jsonify({"status": "error", "error": "No file part"}), 400
 
         file = request.files['file']
         if file.filename == '':
-            return jsonify({"error": "No selected file"}), 400
+            return jsonify({"status": "error", "error": "No file selected"}), 400
 
+        # Validate file extension
         if not file.filename.lower().endswith(('.mp4', '.mov', '.avi')):
-            return jsonify({"error": "Invalid video format"}), 400
+            return jsonify({"status": "error", "error": "Invalid video format"}), 400
 
-        # Save video
+        # Secure filename and save
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"{timestamp}_{file.filename}"
+        filename = f"{timestamp}_{secure_filename(file.filename)}"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
+
+        try:
+            file.save(filepath)
+        except Exception as e:
+            return jsonify({"status": "error", "error": f"File save failed: {str(e)}"}), 500
 
         # Get shirt index safely
         try:
             shirt_index = int(request.form.get('shirt_index', 0))
             shirt_list = get_shirt_list()
-            if not 0 <= shirt_index < len(shirt_list):
-                shirt_index = 0
+            if not shirt_list:
+                return jsonify({"status": "error", "error": "No shirts available"}), 400
+            shirt_index = max(0, min(shirt_index, len(shirt_list) - 1))
         except:
             shirt_index = 0
 
-            # Add timeout check
-            start_time = time.time()
-            processed_filepath = process_video(filepath, filename, shirt_index)
-
-            if time.time() - start_time > 25:  # Warn if close to Render's 30s timeout
-                app.logger.warning("Video processing nearly timed out!")
+        # Process with timeout check
+        start_time = time.time()
+        try:
+            processed_path = process_video(filepath, filename, shirt_index)
+            if time.time() - start_time > 25:  # Warn if close to timeout
+                app.logger.warning("Processing nearly timed out")
 
             return jsonify({
                 "status": "success",
-                "download_url": url_for('download_processed', filename=os.path.basename(processed_filepath))
+                "download_url": url_for('download_processed',
+                                        filename=os.path.basename(processed_path))
             })
+        except Exception as e:
+            app.logger.error(f"Processing crashed: {str(e)}")
+            return jsonify({"status": "error", "error": "Video processing failed"}), 500
 
     except Exception as e:
-        app.logger.error(f"VIDEO PROCESSING CRASHED: {str(e)}", exc_info=True)
-        return jsonify({
-            "status": "error",
-            "error": "Processing failed",
-            "details": str(e) if os.getenv('FLASK_DEBUG') == 'true' else None
-        }), 500
+        app.logger.error(f"Unexpected upload error: {str(e)}")
+        return jsonify({"status": "error", "error": "Internal server error"}), 500
+
+
+# @app.route('/upload', methods=['POST'])
+# def upload_video():
+#     try:
+#         # Validate file exists
+#         if 'file' not in request.files:
+#             return jsonify({"error": "No file part"}), 400
+#
+#         file = request.files['file']
+#         if file.filename == '':
+#             return jsonify({"error": "No file selected"}), 400
+#
+#         # Save file
+#         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+#         filename = f"{timestamp}_{secure_filename(file.filename)}"
+#         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+#
+#         try:
+#             file.save(filepath)
+#         except Exception as e:
+#             return jsonify({"error": f"Failed to save file: {str(e)}"}), 500
+#
+#         # Process video (with timeout check)
+#         try:
+#             processed_path = process_video(filepath, filename, int(request.form.get('shirt_index', 0)))
+#             return jsonify({
+#                 "status": "success",
+#                 "download_url": url_for('download_processed', filename=os.path.basename(processed_path))
+#             })
+#         except Exception as e:
+#             app.logger.error(f"Video processing failed: {str(e)}")
+#             return jsonify({"error": "Video processing failed"}), 500
+#
+#     except Exception as e:
+#         app.logger.error(f"Unexpected error: {str(e)}")
+#         return jsonify({"error": "Internal server error"}), 500
+
+
+
+    # """Handle video uploads and processing."""
+    # try:
+    #     if 'file' not in request.files:
+    #         return jsonify({"error": "No file part"}), 400
+    #
+    #     file = request.files['file']
+    #     if file.filename == '':
+    #         return jsonify({"error": "No selected file"}), 400
+    #
+    #     if not file.filename.lower().endswith(('.mp4', '.mov', '.avi')):
+    #         return jsonify({"error": "Invalid video format"}), 400
+    #
+    #     # Save video
+    #     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    #     filename = f"{timestamp}_{file.filename}"
+    #     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    #     file.save(filepath)
+    #
+    #     # Get shirt index safely
+    #     try:
+    #         shirt_index = int(request.form.get('shirt_index', 0))
+    #         shirt_list = get_shirt_list()
+    #         if not 0 <= shirt_index < len(shirt_list):
+    #             shirt_index = 0
+    #     except:
+    #         shirt_index = 0
+    #
+    #         # Add timeout check
+    #         start_time = time.time()
+    #         processed_filepath = process_video(filepath, filename, shirt_index)
+    #
+    #         if time.time() - start_time > 25:  # Warn if close to Render's 30s timeout
+    #             app.logger.warning("Video processing nearly timed out!")
+    #
+    #         return jsonify({
+    #             "status": "success",
+    #             "download_url": url_for('download_processed', filename=os.path.basename(processed_filepath))
+    #         })
+    #
+    # except Exception as e:
+    #     app.logger.error(f"VIDEO PROCESSING CRASHED: {str(e)}", exc_info=True)
+    #     return jsonify({
+    #         "status": "error",
+    #         "error": "Processing failed",
+    #         "details": str(e) if os.getenv('FLASK_DEBUG') == 'true' else None
+    #     }), 500
+
+
+
+
+
+
+
+
+
     #     processed_filepath = process_video(filepath, filename, shirt_index)
     #     processed_url = url_for('download_processed', filename=os.path.basename(processed_filepath))
     #
@@ -843,7 +1077,7 @@ def download_processed(filename):
     """Serve processed video files."""
     try:
         if '..' in filename or filename.startswith('/'):
-            abort(404)
+            abort(403)
         return send_from_directory(
             os.path.abspath(app.config['PROCESSED_FOLDER']),
             filename,
@@ -852,6 +1086,16 @@ def download_processed(filename):
     except Exception as e:
         app.logger.error(f"Download failed: {str(e)}")
         abort(404)
+
+@app.route('/static/shirts/<filename>')
+def serve_shirt(filename):
+    """Serve shirt images from the correct directory"""
+    try:
+        return send_from_directory(app.config['SHIRT_FOLDER'], filename)
+    except FileNotFoundError:
+        abort(404)
+
+
 
 @app.route('/healthz')
 def health_check():
