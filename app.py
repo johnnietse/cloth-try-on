@@ -535,6 +535,22 @@ load_dotenv()
 
 app = Flask(__name__)
 
+
+app = Flask(__name__)
+
+# Add this right after Flask app creation
+@app.after_request
+def verify_json_response(response):
+    if request.path.startswith('/upload'):
+        if not response.is_json:
+            return jsonify({
+                "status": "error",
+                "error": "Invalid response format"
+            }), 500
+    return response
+
+
+
 # # Get base directory
 # BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 #
@@ -913,6 +929,10 @@ def upload_shirt():
 @app.route('/upload', methods=['POST'])
 def upload_video():
     """Handle video uploads with proper error handling"""
+    app.logger.info("Upload endpoint hit")  # Add this
+    app.logger.info(f"Files received: {request.files}")  # Add this
+    app.logger.info(f"Form data: {request.form}")  # Add this
+
     try:
         # Validate file exists
         if 'file' not in request.files:

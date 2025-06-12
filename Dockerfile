@@ -37,7 +37,14 @@ COPY . .
 ENV PATH=/root/.local/bin:$PATH
 
 # Create necessary directories
-RUN mkdir -p /app/static/uploads /app/static/processed /app/Resources/shirts /app/logs
+RUN mkdir -p /app/static/uploads && \
+    mkdir -p /app/static/processed  && \
+    mkdir -p /app/Resources/shirts
+
+
+RUN pip install -r requirements.txt
+
+#    /app/logs
 
 # Environment variables
 ENV FLASK_APP=app.py
