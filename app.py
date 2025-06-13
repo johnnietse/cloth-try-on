@@ -521,6 +521,8 @@ from cvzone.PoseModule import PoseDetector
 import time  # NEW IMPORT
 from werkzeug.utils import secure_filename
 
+
+
 # Workaround for OpenCV typing issues
 np.int = int
 np.float = float
@@ -570,6 +572,11 @@ SHIRT_FOLDER = os.path.join(BASE_DIR, 'Resources', 'shirts')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['PROCESSED_FOLDER'] = PROCESSED_FOLDER
 app.config['SHIRT_FOLDER'] = SHIRT_FOLDER
+
+# Ensure directories exist
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(PROCESSED_FOLDER, exist_ok=True)
+os.makedirs(SHIRT_FOLDER, exist_ok=True)
 
 # Ensure directories exist with error handling
 for folder in [UPLOAD_FOLDER, PROCESSED_FOLDER, SHIRT_FOLDER]:
@@ -914,16 +921,36 @@ def upload_shirt():
         if file.filename == '':
             return jsonify({"error": "No selected file"}), 400
 
-        if file and file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
-            # Secure filename and save
-            filename = os.path.join(app.config['SHIRT_FOLDER'], file.filename)
-            file.save(filename)
-            return redirect(url_for('index'))
+        allowed_extensions = {'png', 'jpg', 'jpeg'}
 
-        return jsonify({"error": "Invalid file type"}), 400
+        if '.' not in file.filename or file.filename.split('.')[-1].lower() not in allowed_extensions:
+            return jsonify({"error": "Invalid file type. Only PNG, JPG, JPEG allowed."}), 400
+
+            # Save the uploaded shirt to the SHIRT_FOLDER directory
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['SHIRT_FOLDER'], filename)
+        file.save(filepath)
+
+        # Return success response
+        return jsonify({
+            "message": "Shirt uploaded successfully",
+            "filename": filename
+        }), 200
+
     except Exception as e:
-        app.logger.error(f"Shirt upload failed: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
+        app.logger.error(f"Error uploading shirt: {str(e)}")
+        return jsonify({"error": "An error occurred while uploading the shirt"}), 500
+
+    #     if file and file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+    #         # Secure filename and save
+    #         filename = os.path.join(app.config['SHIRT_FOLDER'], file.filename)
+    #         file.save(filename)
+    #         return redirect(url_for('index'))
+    #
+    #     return jsonify({"error": "Invalid file type"}), 400
+    # except Exception as e:
+    #     app.logger.error(f"Shirt upload failed: {str(e)}")
+    #     return jsonify({"error": "Internal server error"}), 500
 
 
 @app.route('/upload', methods=['POST'])
