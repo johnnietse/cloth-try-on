@@ -65,7 +65,8 @@ services:
     region: virginia
     plan: free  # or standard for production
     buildCommand: pip install -r requirements.txt && mkdir -p Resources/shirts static/uploads static/processed  # Add this line
-    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+#    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+    startCommand: gunicorn app:app
     envVars:
       - key: FLASK_APP
         value: app.py

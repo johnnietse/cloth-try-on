@@ -322,51 +322,51 @@
                     }
                 });
 
-<!--                // Add response validation-->
-<!--                if (!response.headers.get('content-type')?.includes('application/json')) {-->
-<!--                    throw new Error(`Server returned unexpected format (${response.status})`);-->
-<!--                }-->
-
-<!--                const result = await response.json();-->
-
-<!--                processingMessage.style.display = 'none';-->
-
-<!--                if (result.status === "error") {-->
-<!--                    notification.style.color = '#ff6b6b';-->
-<!--                    notification.textContent = `Error: ${result.error}`;-->
-<!--                } else {-->
-<!--                    notification.style.color = '#52b788';-->
-<!--                    notification.textContent = result.message;-->
-<!--                    downloadLink.style.display = 'block';-->
-<!--                    downloadLink.innerHTML = `<a href="${result.download_url}" class="btn btn-success btn-lg" download>Download Video</a>`;-->
-<!--                }-->
-<!--                notification.style.display = 'block';-->
-
-<!--            } catch (error) {-->
-<!--                processingMessage.style.display = 'none';-->
-<!--                notification.style.display = 'block';-->
-<!--                notification.style.color = '#ff6b6b';-->
-<!--                notification.textContent = `Error: ${error.message}`;-->
-<!--                console.error('Upload failed:', error);-->
-<!--            }-->
+                // Add response validation
+                if (!response.headers.get('content-type')?.includes('application/json')) {
+                    throw new Error(`Server returned unexpected format (${response.status})`);
+                }
 
                 const result = await response.json();
 
-                if (response.ok) {
-                    processingMessage.style.display = 'none';
-                    notification.style.display = 'block';
-                    notification.textContent = result.message;
+                processingMessage.style.display = 'none';
 
-                    downloadLink.style.display = 'block';
-                    downloadLink.innerHTML = `<a href="${result.download_url}" class="btn btn-success btn-lg" download>Download Processed Video</a>`;
+                if (result.status === "error") {
+                    notification.style.color = '#ff6b6b';
+                    notification.textContent = `Error: ${result.error}`;
                 } else {
-                    processingMessage.style.display = 'none';
-                    alert(result.error || 'An error occurred during upload.');
+                    notification.style.color = '#52b788';
+                    notification.textContent = result.message;
+                    downloadLink.style.display = 'block';
+                    downloadLink.innerHTML = `<a href="${result.download_url}" class="btn btn-success btn-lg" download>Download Video</a>`;
                 }
+                notification.style.display = 'block';
+
             } catch (error) {
                 processingMessage.style.display = 'none';
-                alert('An error occurred: ' + error.message);
+                notification.style.display = 'block';
+                notification.style.color = '#ff6b6b';
+                notification.textContent = `Error: ${error.message}`;
+                console.error('Upload failed:', error);
             }
+
+<!--                const result = await response.json();-->
+
+<!--                if (response.ok) {-->
+<!--                    processingMessage.style.display = 'none';-->
+<!--                    notification.style.display = 'block';-->
+<!--                    notification.textContent = result.message;-->
+
+<!--                    downloadLink.style.display = 'block';-->
+<!--                    downloadLink.innerHTML = `<a href="${result.download_url}" class="btn btn-success btn-lg" download>Download Processed Video</a>`;-->
+<!--                } else {-->
+<!--                    processingMessage.style.display = 'none';-->
+<!--                    alert(result.error || 'An error occurred during upload.');-->
+<!--                }-->
+<!--            } catch (error) {-->
+<!--                processingMessage.style.display = 'none';-->
+<!--                alert('An error occurred: ' + error.message);-->
+<!--            }-->
         });
     </script>
 
