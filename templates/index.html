@@ -1,51 +1,455 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>Virtual Try-On</title>-->
+<!--    &lt;!&ndash; Bootstrap CSS &ndash;&gt;-->
+<!--    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">-->
+<!--    &lt;!&ndash; Font Awesome for Icons &ndash;&gt;-->
+<!--    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">-->
+<!--    &lt;!&ndash; Custom CSS &ndash;&gt;-->
+<!--    <style>-->
+<!--        /* General Body Styles */-->
+<!--        body {-->
+<!--            background-color: #121212; /* Black background */-->
+<!--            font-family: 'Arial', sans-serif;-->
+<!--            color: #f0f0f0; /* Light gray text for readability */-->
+<!--        }-->
+
+<!--        /* Navbar Styles */-->
+<!--        .navbar {-->
+<!--            background-color: #1e1e1e; /* Darker black */-->
+<!--            border-bottom: 1px solid #333333; /* Subtle border for separation */-->
+<!--        }-->
+<!--        .navbar-brand {-->
+<!--            color: #ffffff !important; /* Pure white text */-->
+<!--            font-weight: bold;-->
+<!--            font-size: 1.5rem;-->
+<!--        }-->
+<!--        .navbar a {-->
+<!--            color: #b0b0b0 !important; /* Light gray for links */-->
+<!--        }-->
+<!--        .navbar a:hover {-->
+<!--            color: #ffffff !important; /* White hover effect */-->
+<!--        }-->
+<!--        .form-label, .mt-4{-->
+<!--            color: white;-->
+<!--        }-->
+
+<!--        /* Card Styling */-->
+<!--        .card {-->
+<!--            border: none;-->
+<!--            border-radius: 10px;-->
+<!--            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4); /* Subtle shadow */-->
+<!--            background: #1e1e1e; /* Darker black for cards */-->
+<!--        }-->
+
+<!--        /* Shirt Selection */-->
+<!--        .shirt-selection img {-->
+<!--            border: 2px solid transparent;-->
+<!--            border-radius: 10px;-->
+<!--            cursor: pointer;-->
+<!--            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;-->
+<!--        }-->
+<!--        .shirt-selection img:hover {-->
+<!--            transform: scale(1.05);-->
+<!--            border-color: #ffffff; /* Highlight with white border */-->
+<!--            box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.5); /* White glow */-->
+<!--        }-->
+<!--        .shirt-selection img.selected {-->
+<!--            border-color: #ffffff; /* Highlight the selected shirt */-->
+<!--            box-shadow: 0px 0px 10px #ffffff;-->
+<!--        }-->
+
+<!--        /* Buttons */-->
+<!--        .btn-primary {-->
+<!--            background-color: #333333; /* Dark gray for buttons */-->
+<!--            border: none;-->
+<!--            color: #ffffff; /* White text */-->
+<!--        }-->
+<!--        .btn-primary:hover {-->
+<!--            background-color: #444444; /* Slightly lighter gray on hover */-->
+<!--        }-->
+
+<!--        /* Processing Message */-->
+<!--        .processing-message {-->
+<!--            display: none;-->
+<!--            text-align: center;-->
+<!--            font-size: 1.5em;-->
+<!--            color: #ffffff; /* White for visibility */-->
+<!--            font-weight: bold;-->
+<!--            margin-top: 20px;-->
+<!--        }-->
+
+<!--        /* Spinner */-->
+<!--        .spinner-border {-->
+<!--            width: 3rem;-->
+<!--            height: 3rem;-->
+<!--            color: #ffffff; /* White spinner */-->
+<!--        }-->
+
+<!--        /* Notification */-->
+<!--        .notification {-->
+<!--            color: #52b788; /* Soft green for success */-->
+<!--        }-->
+
+<!--        /* Footer */-->
+<!--        footer {-->
+<!--            background-color: #1e1e1e; /* Dark footer */-->
+<!--            color: #b0b0b0; /* Light gray for text */-->
+<!--            text-align: center;-->
+<!--            padding: 20px 0;-->
+<!--            margin-top: 40px;-->
+<!--        }-->
+<!--        footer a {-->
+<!--            color: #b0b0b0;-->
+<!--            margin: 0 10px;-->
+<!--            font-size: 1.2rem;-->
+<!--        }-->
+<!--        footer a:hover {-->
+<!--            color: #ffffff; /* White hover effect */-->
+<!--        }-->
+
+
+
+<!--        /* Light Theme */-->
+<!--        body.light {-->
+<!--            background-color: #ffffff;-->
+<!--            color: #121212; /* Dark text for readability */-->
+<!--        }-->
+
+<!--        body.light .navbar {-->
+<!--            background-color: #f8f9fa; /* Light navbar */-->
+<!--            border-bottom: 1px solid #dee2e6; /* Subtle border */-->
+<!--        }-->
+
+<!--        body.light .navbar-brand,-->
+<!--        body.light .navbar a {-->
+<!--            color: #121212 !important;-->
+<!--        }-->
+<!--        body.light .navbar a:hover {-->
+<!--            color: #007bff !important; /* Blue hover effect */-->
+<!--        }-->
+
+<!--        body.light .card {-->
+<!--            background: #f8f9fa; /* Light card */-->
+<!--            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Lighter shadow */-->
+<!--        }-->
+
+<!--        body.light .form-label {-->
+<!--            color: #121212; /* Dark text */-->
+<!--        }-->
+
+<!--        body.light .btn-primary {-->
+<!--            background-color: #007bff; /* Blue button */-->
+<!--            color: #ffffff;-->
+<!--        }-->
+<!--        body.light .btn-primary:hover {-->
+<!--            background-color: #0056b3; /* Darker blue on hover */-->
+<!--        }-->
+
+<!--        body.light footer {-->
+<!--            background-color: #f8f9fa; /* Light footer */-->
+<!--            color: #121212;-->
+<!--        }-->
+<!--        body.light footer a {-->
+<!--            color: #007bff;-->
+<!--        }-->
+<!--        body.light footer a:hover {-->
+<!--            color: #0056b3;-->
+<!--        }-->
+
+<!--        /* Light Theme Sun Icon */-->
+<!--        body.light #themeSwitcher {-->
+<!--            border: 2px solid #333;  /* Dark border for sun icon */-->
+<!--            background-color: #444;  /* Dark background */-->
+<!--        }-->
+
+<!--        body.light #themeSwitcher i {-->
+<!--            color: #ffffff;  /* White color for the sun icon */-->
+<!--        }-->
+
+<!--        /* Light Theme Shirt Image Hover Effect */-->
+<!--        body.light .shirt-selection img:hover {-->
+<!--            border-color: #444;  /* Darker border on hover */-->
+<!--            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);  /* Darker shadow effect */-->
+<!--        }-->
+
+<!--        /* Light Theme Selected Shirt Image */-->
+<!--        body.light .shirt-selection img.selected {-->
+<!--            border-color: #444;  /* Darker border when selected */-->
+<!--            box-shadow: 0px 0px 10px #444;  /* Dark shadow effect */-->
+<!--        }-->
+
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--    &lt;!&ndash; Navbar &ndash;&gt;-->
+<!--    <nav class="navbar navbar-expand-lg">-->
+<!--        <div class="container">-->
+<!--            <a class="navbar-brand" href="#">Virtual Try-On</a>-->
+<!--            <div class="collapse navbar-collapse" id="navbarNav">-->
+<!--                <ul class="navbar-nav ms-auto">-->
+<!--                   &lt;!&ndash; Theme Switcher Icon &ndash;&gt;-->
+<!--                    <button id="themeSwitcher" class="btn btn-outline-light ms-3">-->
+<!--                        <i class="fas fa-moon"></i>-->
+<!--                    </button>-->
+<!--                </ul>-->
+
+
+
+
+
+<!--            </div>-->
+<!--        </div>-->
+<!--    </nav>-->
+
+<!--    &lt;!&ndash; Main Content &ndash;&gt;-->
+<!--    <div class="container">-->
+<!--        <h1 class="text-center mt-5">Transform Your Videos in Seconds</h1>-->
+<!--        <p class="text-center text-secondary">Easily upload a shirt design, upload a video of yourself, pick your favorite shirt design, and download a personalized, processed video of your virtual try-on on clothes.</p>-->
+
+
+
+
+
+
+
+<!--        <div class="card shadow mt-4 p-4">-->
+<!--            <h3 class="text-center mb-4">Upload a New Shirt</h3>-->
+<!--            <form action="/upload_shirt" method="POST" enctype="multipart/form-data">-->
+<!--                <div class="mb-3">-->
+<!--                    <label for="shirt_image" class="form-label">Choose a Shirt Image</label>-->
+<!--                    <input type="file" class="form-control" name="shirt_image" id="shirt_image" required>-->
+<!--                </div>-->
+<!--                <div class="text-center">-->
+<!--                    <button type="submit" class="btn btn-primary btn-lg">Upload Shirt</button>-->
+<!--                </div>-->
+<!--            </form>-->
+<!--        </div>-->
+
+
+<!--        <div class="card shadow mt-4 p-4">-->
+
+
+<!--            <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">-->
+<!--                <div class="mb-3">-->
+<!--                    <label for="file" class="form-label">Choose a Video to Upload</label>-->
+<!--                    <input type="file" class="form-control" name="file" accept="video/*" required>-->
+<!--                </div>-->
+
+<!--                <h3 class="mt-4">Select a Shirt</h3>-->
+<!--                <div class="row shirt-selection">-->
+<!--                    {% for shirt in shirts %}-->
+<!--                    <div class="col-6 col-md-4 col-lg-3 text-center mt-3">-->
+<!--                        <label>-->
+<!--                            <input type="radio" name="shirt_index" value="{{ loop.index0 }}" {% if loop.index0 == 0 %}checked{% endif %} hidden>-->
+<!--                            <img src="/static/shirts/{{ shirt }}" alt="{{ shirt }}" class="img-fluid shirt-image {% if loop.index0 == 0 %}selected{% endif %}">-->
+<!--                        </label>-->
+<!--                    </div>-->
+<!--                    {% endfor %}-->
+<!--                </div>-->
+
+<!--                <div class="text-center mt-4">-->
+<!--                    <button type="submit" class="btn btn-primary btn-lg">Upload and Process</button>-->
+<!--                </div>-->
+<!--            </form>-->
+<!--        </div>-->
+
+<!--        &lt;!&ndash; Processing Message &ndash;&gt;-->
+<!--        <div id="processingMessage" class="processing-message mt-4">-->
+<!--            <div class="d-flex justify-content-center">-->
+<!--                <div class="spinner-border text-primary" role="status"></div>-->
+<!--            </div>-->
+<!--            <p>Processing your video, please wait...</p>-->
+<!--        </div>-->
+
+<!--        &lt;!&ndash; Notification and Download Link &ndash;&gt;-->
+<!--        <div id="notification" class="notification text-center mt-4" style="display: none;"></div>-->
+<!--        <div id="downloadLink" class="download-link text-center" style="display: none;"></div>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; Footer &ndash;&gt;-->
+<!--    <footer>-->
+<!--        <p>&copy; 2025 Virtual Try-On. All rights reserved.</p>-->
+<!--        <div>-->
+<!--            <a href="https://www.instagram.com/jt__boi/"><i class="fab fa-instagram"></i></a>-->
+<!--            <a href="mailto:johnnietse994@gmail.com?subject=Mail from our Website"><i class="fab fa fa-envelope"></i></a>-->
+<!--            <a href="https://www.linkedin.com/in/johnnie-tse/"><i class="fab fa-linkedin"></i></a>-->
+<!--            <a href="https://github.com/johnnietse/virtual-try-on-webapp.git"><i class="fab fa-github"></i></a>-->
+<!--        </div>-->
+<!--    </footer>-->
+
+<!--    &lt;!&ndash; Bootstrap JS and dependencies &ndash;&gt;-->
+<!--    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>-->
+<!--    &lt;!&ndash; Font Awesome &ndash;&gt;-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>-->
+<!--    &lt;!&ndash; Custom JavaScript &ndash;&gt;-->
+<!--    <script>-->
+<!--        const uploadForm = document.getElementById('uploadForm');-->
+<!--        const notification = document.getElementById('notification');-->
+<!--        const downloadLink = document.getElementById('downloadLink');-->
+<!--        const processingMessage = document.getElementById('processingMessage');-->
+<!--        const shirtImages = document.querySelectorAll('.shirt-image');-->
+<!--        const shirtRadios = document.querySelectorAll('input[name="shirt_index"]');-->
+
+<!--        // Handle shirt selection-->
+<!--        shirtImages.forEach((img, index) => {-->
+<!--            img.addEventListener('click', () => {-->
+<!--                shirtImages.forEach(image => image.classList.remove('selected'));-->
+<!--                img.classList.add('selected');-->
+<!--                shirtRadios[index].checked = true;-->
+<!--            });-->
+<!--        });-->
+
+<!--        // Handle form submission-->
+<!--        uploadForm.addEventListener('submit', async (e) => {-->
+<!--            e.preventDefault();-->
+
+<!--            notification.style.display = 'none';-->
+<!--            downloadLink.style.display = 'none';-->
+<!--            processingMessage.style.display = 'block';-->
+
+<!--            const formData = new FormData(uploadForm);-->
+
+<!--            try {-->
+<!--                const response = await fetch('/upload', {-->
+<!--                    method: 'POST',-->
+<!--                    body: formData-->
+<!--                });-->
+
+<!--                // Check if response is JSON-->
+<!--                const contentType = response.headers.get('content-type');-->
+<!--                if (!contentType || !contentType.includes('application/json')) {-->
+<!--                    throw new Error(`Unexpected response type: ${contentType}`);-->
+<!--                }-->
+
+<!--                const result = await response.json();-->
+
+<!--                if (response.ok) {-->
+<!--                    processingMessage.style.display = 'none';-->
+<!--                    notification.style.display = 'block';-->
+<!--                    notification.textContent = result.message;-->
+
+<!--                    downloadLink.style.display = 'block';-->
+<!--                    downloadLink.innerHTML = `<a href="${result.download_url}" class="btn btn-success btn-lg" download>Download Processed Video</a>`;-->
+<!--                } else {-->
+<!--                    processingMessage.style.display = 'none';-->
+<!--                    alert(result.error || 'An error occurred during upload.');-->
+<!--                }-->
+<!--            } catch (error) {-->
+<!--                processingMessage.style.display = 'none';-->
+<!--                alert('An error occurred: ' + error.message);-->
+<!--            }-->
+<!--        });-->
+<!--    </script>-->
+
+
+<!--    <script>-->
+<!--        const themeSwitcher = document.getElementById("themeSwitcher");-->
+<!--        const body = document.body;-->
+<!--        const uploadNewShirtText = document.querySelector("h3.text-center.mb-4");-->
+<!--        const selectAShirtText = document.querySelector("h3.mt-4");-->
+
+
+
+<!--        // Default theme based on user preference or set to dark-->
+<!--        const currentTheme = localStorage.getItem("theme") || "dark";-->
+<!--        body.classList.add(currentTheme);-->
+
+<!--        // Update icon based on current theme-->
+<!--        const updateIcon = () => {-->
+<!--            if (body.classList.contains("dark")) {-->
+<!--                themeSwitcher.innerHTML = '<i class="fas fa-moon"></i>';-->
+<!--                uploadNewShirtText.style.color = "#ffffff"; // White text for dark theme-->
+<!--                selectAShirtText.style.color = "#ffffff"; // White text for dark theme-->
+
+
+<!--            } else {-->
+<!--                themeSwitcher.innerHTML = '<i class="fas fa-sun"></i>';-->
+<!--                uploadNewShirtText.style.color = "#121212"; // Dark text for light theme-->
+<!--                selectAShirtText.style.color = "#121212"; // Dark text for light theme-->
+
+<!--            }-->
+<!--        };-->
+
+<!--        updateIcon();-->
+
+<!--        // Theme toggle functionality-->
+<!--        themeSwitcher.addEventListener("click", () => {-->
+<!--            if (body.classList.contains("dark")) {-->
+<!--                body.classList.replace("dark", "light");-->
+<!--                localStorage.setItem("theme", "light");-->
+<!--            } else {-->
+<!--                body.classList.replace("light", "dark");-->
+<!--                localStorage.setItem("theme", "dark");-->
+<!--            }-->
+<!--            updateIcon();-->
+<!--        });-->
+<!--    </script>-->
+
+
+
+
+<!--</body>-->
+<!--</html>-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Virtual Try-On</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome for Icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
     <style>
-        /* General Body Styles */
         body {
-            background-color: #121212; /* Black background */
+            background-color: #121212;
             font-family: 'Arial', sans-serif;
-            color: #f0f0f0; /* Light gray text for readability */
+            color: #f0f0f0;
         }
-
-        /* Navbar Styles */
         .navbar {
-            background-color: #1e1e1e; /* Darker black */
-            border-bottom: 1px solid #333333; /* Subtle border for separation */
+            background-color: #1e1e1e;
+            border-bottom: 1px solid #333333;
         }
         .navbar-brand {
-            color: #ffffff !important; /* Pure white text */
+            color: #ffffff !important;
             font-weight: bold;
             font-size: 1.5rem;
         }
         .navbar a {
-            color: #b0b0b0 !important; /* Light gray for links */
+            color: #b0b0b0 !important;
         }
         .navbar a:hover {
-            color: #ffffff !important; /* White hover effect */
+            color: #ffffff !important;
         }
-        .form-label, .mt-4{
+        .form-label, .mt-4 {
             color: white;
         }
-
-        /* Card Styling */
         .card {
             border: none;
             border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4); /* Subtle shadow */
-            background: #1e1e1e; /* Darker black for cards */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+            background: #1e1e1e;
         }
-
-        /* Shirt Selection */
         .shirt-selection img {
             border: 2px solid transparent;
             border-radius: 10px;
@@ -54,50 +458,37 @@
         }
         .shirt-selection img:hover {
             transform: scale(1.05);
-            border-color: #ffffff; /* Highlight with white border */
-            box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.5); /* White glow */
+            border-color: #ffffff;
+            box-shadow: 0px 4px 10px rgba(255, 255, 255, 0.5);
         }
         .shirt-selection img.selected {
-            border-color: #ffffff; /* Highlight the selected shirt */
+            border-color: #ffffff;
             box-shadow: 0px 0px 10px #ffffff;
         }
-
-        /* Buttons */
         .btn-primary {
-            background-color: #333333; /* Dark gray for buttons */
+            background-color: #333333;
             border: none;
-            color: #ffffff; /* White text */
+            color: #ffffff;
         }
         .btn-primary:hover {
-            background-color: #444444; /* Slightly lighter gray on hover */
+            background-color: #444444;
         }
-
-        /* Processing Message */
         .processing-message {
             display: none;
             text-align: center;
             font-size: 1.5em;
-            color: #ffffff; /* White for visibility */
+            color: #ffffff;
             font-weight: bold;
             margin-top: 20px;
         }
-
-        /* Spinner */
         .spinner-border {
             width: 3rem;
             height: 3rem;
-            color: #ffffff; /* White spinner */
+            color: #ffffff;
         }
-
-        /* Notification */
-        .notification {
-            color: #52b788; /* Soft green for success */
-        }
-
-        /* Footer */
         footer {
-            background-color: #1e1e1e; /* Dark footer */
-            color: #b0b0b0; /* Light gray for text */
+            background-color: #1e1e1e;
+            color: #b0b0b0;
             text-align: center;
             padding: 20px 0;
             margin-top: 40px;
@@ -108,49 +499,41 @@
             font-size: 1.2rem;
         }
         footer a:hover {
-            color: #ffffff; /* White hover effect */
+            color: #ffffff;
         }
-
-
 
         /* Light Theme */
         body.light {
             background-color: #ffffff;
-            color: #121212; /* Dark text for readability */
+            color: #121212;
         }
-
         body.light .navbar {
-            background-color: #f8f9fa; /* Light navbar */
-            border-bottom: 1px solid #dee2e6; /* Subtle border */
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
         }
-
         body.light .navbar-brand,
         body.light .navbar a {
             color: #121212 !important;
         }
         body.light .navbar a:hover {
-            color: #007bff !important; /* Blue hover effect */
+            color: #007bff !important;
         }
-
         body.light .card {
-            background: #f8f9fa; /* Light card */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Lighter shadow */
+            background: #f8f9fa;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-
         body.light .form-label {
-            color: #121212; /* Dark text */
+            color: #121212;
         }
-
         body.light .btn-primary {
-            background-color: #007bff; /* Blue button */
+            background-color: #007bff;
             color: #ffffff;
         }
         body.light .btn-primary:hover {
-            background-color: #0056b3; /* Darker blue on hover */
+            background-color: #0056b3;
         }
-
         body.light footer {
-            background-color: #f8f9fa; /* Light footer */
+            background-color: #f8f9fa;
             color: #121212;
         }
         body.light footer a {
@@ -159,62 +542,61 @@
         body.light footer a:hover {
             color: #0056b3;
         }
-
-        /* Light Theme Sun Icon */
         body.light #themeSwitcher {
-            border: 2px solid #333;  /* Dark border for sun icon */
-            background-color: #444;  /* Dark background */
+            border: 2px solid #333;
+            background-color: #444;
         }
-
         body.light #themeSwitcher i {
-            color: #ffffff;  /* White color for the sun icon */
+            color: #ffffff;
         }
-
-        /* Light Theme Shirt Image Hover Effect */
         body.light .shirt-selection img:hover {
-            border-color: #444;  /* Darker border on hover */
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);  /* Darker shadow effect */
+            border-color: #444;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
         }
-
-        /* Light Theme Selected Shirt Image */
         body.light .shirt-selection img.selected {
-            border-color: #444;  /* Darker border when selected */
-            box-shadow: 0px 0px 10px #444;  /* Dark shadow effect */
+            border-color: #444;
+            box-shadow: 0px 0px 10px #444;
         }
 
+        /* New styles for image preview */
+        .image-preview {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+        .result-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .result-image {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
-<body>
+<body class="dark">
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg">
         <div class="container">
             <a class="navbar-brand" href="#">Virtual Try-On</a>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                   <!-- Theme Switcher Icon -->
                     <button id="themeSwitcher" class="btn btn-outline-light ms-3">
                         <i class="fas fa-moon"></i>
                     </button>
                 </ul>
-
-
-
-
-
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
     <div class="container">
-        <h1 class="text-center mt-5">Transform Your Videos in Seconds</h1>
-        <p class="text-center text-secondary">Easily upload a shirt design, upload a video of yourself, pick your favorite shirt design, and download a personalized, processed video of your virtual try-on on clothes.</p>
-
-
-
-
-
-
+        <h1 class="text-center mt-5">Transform Your Look in Seconds</h1>
+        <p class="text-center text-secondary">
+            Upload a shirt design, upload your photo, and see how it looks on you!
+        </p>
 
         <div class="card shadow mt-4 p-4">
             <h3 class="text-center mb-4">Upload a New Shirt</h3>
@@ -229,14 +611,12 @@
             </form>
         </div>
 
-
         <div class="card shadow mt-4 p-4">
-
-
-            <form id="uploadForm" action="/upload" method="POST" enctype="multipart/form-data">
+            <form id="uploadForm" method="POST" enctype="multipart/form-data">
                 <div class="mb-3">
-                    <label for="file" class="form-label">Choose a Video to Upload</label>
-                    <input type="file" class="form-control" name="file" accept="video/*" required>
+                    <label for="user_image" class="form-label">Upload Your Photo</label>
+                    <input type="file" class="form-control" name="user_image" id="user_image" accept="image/*" required>
+                    <img id="userPreview" class="image-preview" alt="Your photo">
                 </div>
 
                 <h3 class="mt-4">Select a Shirt</h3>
@@ -252,22 +632,29 @@
                 </div>
 
                 <div class="text-center mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg">Upload and Process</button>
+                    <button type="submit" class="btn btn-primary btn-lg">Try It On!</button>
                 </div>
             </form>
         </div>
 
         <!-- Processing Message -->
-        <div id="processingMessage" class="processing-message mt-4">
+        <div id="processingMessage" class="processing-message mt-4" style="display: none;">
             <div class="d-flex justify-content-center">
                 <div class="spinner-border text-primary" role="status"></div>
             </div>
-            <p>Processing your video, please wait...</p>
+            <p>Processing your image, please wait...</p>
         </div>
 
-        <!-- Notification and Download Link -->
-        <div id="notification" class="notification text-center mt-4" style="display: none;"></div>
-        <div id="downloadLink" class="download-link text-center" style="display: none;"></div>
+        <!-- Results Section -->
+        <div id="resultContainer" class="result-container" style="display: none;">
+            <h3>Your Virtual Try-On Result</h3>
+            <img id="resultImage" class="result-image" alt="Virtual try-on result">
+            <div class="mt-3">
+                <a id="downloadLink" class="btn btn-success btn-lg">
+                    <i class="fas fa-download"></i> Download Image
+                </a>
+            </div>
+        </div>
     </div>
 
     <!-- Footer -->
@@ -281,18 +668,21 @@
         </div>
     </footer>
 
-    <!-- Bootstrap JS and dependencies -->
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Font Awesome -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
-    <!-- Custom JavaScript -->
     <script>
         const uploadForm = document.getElementById('uploadForm');
-        const notification = document.getElementById('notification');
-        const downloadLink = document.getElementById('downloadLink');
+        const userImageInput = document.getElementById('user_image');
+        const userPreview = document.getElementById('userPreview');
         const processingMessage = document.getElementById('processingMessage');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultImage = document.getElementById('resultImage');
+        const downloadLink = document.getElementById('downloadLink');
         const shirtImages = document.querySelectorAll('.shirt-image');
         const shirtRadios = document.querySelectorAll('input[name="shirt_index"]');
+        const themeSwitcher = document.getElementById('themeSwitcher');
+        const body = document.body;
 
         // Handle shirt selection
         shirtImages.forEach((img, index) => {
@@ -303,13 +693,25 @@
             });
         });
 
+        // Preview user image
+        userImageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    userPreview.src = e.target.result;
+                    userPreview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
         // Handle form submission
         uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            notification.style.display = 'none';
-            downloadLink.style.display = 'none';
             processingMessage.style.display = 'block';
+            resultContainer.style.display = 'none';
 
             const formData = new FormData(uploadForm);
 
@@ -319,64 +721,38 @@
                     body: formData
                 });
 
-                // Check if response is JSON
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    throw new Error(`Unexpected response type: ${contentType}`);
-                }
-
                 const result = await response.json();
 
-                if (response.ok) {
-                    processingMessage.style.display = 'none';
-                    notification.style.display = 'block';
-                    notification.textContent = result.message;
+                if (response.ok && result.success) {
+                    resultImage.src = result.processed_url;
+                    downloadLink.href = result.processed_url;
+                    downloadLink.download = `virtual-tryon-${Date.now()}.jpg`;
 
-                    downloadLink.style.display = 'block';
-                    downloadLink.innerHTML = `<a href="${result.download_url}" class="btn btn-success btn-lg" download>Download Processed Video</a>`;
-                } else {
                     processingMessage.style.display = 'none';
-                    alert(result.error || 'An error occurred during upload.');
+                    resultContainer.style.display = 'block';
+                } else {
+                    throw new Error(result.error || 'Image processing failed');
                 }
             } catch (error) {
                 processingMessage.style.display = 'none';
-                alert('An error occurred: ' + error.message);
+                alert('Error: ' + error.message);
             }
         });
-    </script>
 
-
-    <script>
-        const themeSwitcher = document.getElementById("themeSwitcher");
-        const body = document.body;
-        const uploadNewShirtText = document.querySelector("h3.text-center.mb-4");
-        const selectAShirtText = document.querySelector("h3.mt-4");
-
-
-
-        // Default theme based on user preference or set to dark
+        // Theme switcher
         const currentTheme = localStorage.getItem("theme") || "dark";
         body.classList.add(currentTheme);
 
-        // Update icon based on current theme
         const updateIcon = () => {
             if (body.classList.contains("dark")) {
                 themeSwitcher.innerHTML = '<i class="fas fa-moon"></i>';
-                uploadNewShirtText.style.color = "#ffffff"; // White text for dark theme
-                selectAShirtText.style.color = "#ffffff"; // White text for dark theme
-
-
             } else {
                 themeSwitcher.innerHTML = '<i class="fas fa-sun"></i>';
-                uploadNewShirtText.style.color = "#121212"; // Dark text for light theme
-                selectAShirtText.style.color = "#121212"; // Dark text for light theme
-
             }
         };
 
         updateIcon();
 
-        // Theme toggle functionality
         themeSwitcher.addEventListener("click", () => {
             if (body.classList.contains("dark")) {
                 body.classList.replace("dark", "light");
@@ -388,27 +764,5 @@
             updateIcon();
         });
     </script>
-
-
-
-
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
