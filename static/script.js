@@ -162,6 +162,103 @@
 
 
 
+//
+//// Wait for the document to load
+//document.addEventListener('DOMContentLoaded', () => {
+//    const uploadForm = document.getElementById('uploadForm');
+//    const statusMessage = document.getElementById('statusMessage');
+//    const videoWrapper = document.getElementById('videoWrapper');
+//    const processedVideo = document.getElementById('processedVideo');
+//    const processButton = document.getElementById('processButton');
+//    let uploadedVideoPath = '';
+//
+//    // Event listener for the form submission (video upload)
+//    uploadForm.addEventListener('submit', async (event) => {
+//        event.preventDefault();
+//
+//        // Clear any previous status messages
+//        statusMessage.innerHTML = 'Uploading video...';
+//
+//        // Create form data to send the video file
+//        const formData = new FormData();
+//        const videoFile = document.getElementById('video').files[0];
+//        formData.append('video', videoFile);
+//
+//        try {
+//            const response = await fetch('/upload', {
+//                method: 'POST',
+//                body: formData
+//            });
+//
+//            if (!response.ok) {
+//                const error = await response.json().catch(() => ({ error: "Unknown error" }));
+//                throw new Error(error.message || "Upload failed");
+//            }
+//
+//            const data = await response.json();
+//            console.log("Backend response:", data);
+//            if (data.status === "error") throw new Error(data.error);
+//
+//            uploadedVideoPath = data.filePath;
+//            statusMessage.innerHTML = 'Video uploaded successfully. Click the button to process the video.';
+//            processButton.style.display = 'inline-block';
+//        } catch (error) {
+//            console.error('Error during video upload:', error);
+//            statusMessage.innerHTML = 'An error occurred while uploading the video. Please try again.';
+//        }
+//    });
+//
+//    // Function to handle the processing of the uploaded video
+//    window.processVideo = async () => {
+//        statusMessage.innerHTML = 'Processing video...';
+//
+//        try {
+//            const processResponse = await fetch('/process', {
+//                method: 'POST',
+//                headers: {
+//                    'Content-Type': 'application/json'
+//                },
+//                body: JSON.stringify({ videoPath: uploadedVideoPath })
+//            });
+//
+//            if (!processResponse.ok) {
+//                const error = await processResponse.json().catch(() => ({ error: "Processing failed" }));
+//                throw new Error(error.message || "Process failed");
+//            }
+//
+//            const processData = await processResponse.json();
+//            const outputPath = processData.outputPath;
+//
+//            statusMessage.innerHTML = 'Video processed successfully. Loading the processed video...';
+//            processedVideo.src = outputPath;
+//            videoWrapper.style.display = 'block';
+//            statusMessage.innerHTML = 'Processing complete. Enjoy the video!';
+//        } catch (error) {
+//            console.error('Error during video processing:', error);
+//            statusMessage.innerHTML = 'An error occurred while processing the video. Please try again.';
+//        }
+//    };
+//});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Wait for the document to load
 document.addEventListener('DOMContentLoaded', () => {
@@ -176,10 +273,8 @@ document.addEventListener('DOMContentLoaded', () => {
     uploadForm.addEventListener('submit', async (event) => {
         event.preventDefault();
 
-        // Clear any previous status messages
         statusMessage.innerHTML = 'Uploading video...';
 
-        // Create form data to send the video file
         const formData = new FormData();
         const videoFile = document.getElementById('video').files[0];
         formData.append('video', videoFile);
@@ -190,21 +285,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: formData
             });
 
-            if (!response.ok) {
-                const error = await response.json().catch(() => ({ error: "Unknown error" }));
-                throw new Error(error.message || "Upload failed");
+            const text = await response.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch {
+                throw new Error('Server response is not valid JSON: ' + text);
             }
 
-            const data = await response.json();
-            console.log("Backend response:", data);
-            if (data.status === "error") throw new Error(data.error);
+            if (!response.ok || data.status === "error") {
+                throw new Error(data?.error || "Upload failed");
+            }
 
             uploadedVideoPath = data.filePath;
             statusMessage.innerHTML = 'Video uploaded successfully. Click the button to process the video.';
             processButton.style.display = 'inline-block';
         } catch (error) {
             console.error('Error during video upload:', error);
-            statusMessage.innerHTML = 'An error occurred while uploading the video. Please try again.';
+            statusMessage.innerHTML = 'An error occurred while uploading the video. ' + error.message;
         }
     });
 
@@ -213,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
         statusMessage.innerHTML = 'Processing video...';
 
         try {
-            const processResponse = await fetch('/process', {
+            const response = await fetch('/process', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -221,21 +319,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ videoPath: uploadedVideoPath })
             });
 
-            if (!processResponse.ok) {
-                const error = await processResponse.json().catch(() => ({ error: "Processing failed" }));
-                throw new Error(error.message || "Process failed");
+            const text = await response.text();
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch {
+                throw new Error('Server response is not valid JSON: ' + text);
             }
 
-            const processData = await processResponse.json();
-            const outputPath = processData.outputPath;
+            if (!response.ok || data.status === "error") {
+                throw new Error(data?.error || "Processing failed");
+            }
 
+            const outputPath = data.outputPath;
             statusMessage.innerHTML = 'Video processed successfully. Loading the processed video...';
             processedVideo.src = outputPath;
             videoWrapper.style.display = 'block';
             statusMessage.innerHTML = 'Processing complete. Enjoy the video!';
         } catch (error) {
             console.error('Error during video processing:', error);
-            statusMessage.innerHTML = 'An error occurred while processing the video. Please try again.';
+            statusMessage.innerHTML = 'An error occurred while processing the video. ' + error.message;
         }
     };
 });
