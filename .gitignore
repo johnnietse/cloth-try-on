@@ -1,0 +1,9 @@
+kubernetes/*
+myapp/*
+processed/*
+resources/*
+static/uploads/*
+static/processed/*
+static/Resources/*
+uploads/*
+run.py
