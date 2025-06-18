@@ -65,7 +65,9 @@ services:
     region: virginia
     plan: free  # or standard for production
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+#    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+    startCommand: gunicorn --config gunicorn_config.py app:app
+
     envVars:
       - key: FLASK_APP
         value: app.py
