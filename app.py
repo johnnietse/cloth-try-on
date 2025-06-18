@@ -555,6 +555,9 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['PROCESSED_FOLDER'] = PROCESSED_FOLDER
 app.config['SHIRT_FOLDER'] = SHIRT_FOLDER
 
+
+
+
 # Ensure directories exist with error handling
 for folder in [UPLOAD_FOLDER, PROCESSED_FOLDER, SHIRT_FOLDER]:
     try:
