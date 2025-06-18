@@ -640,6 +640,7 @@ def process_video(input_path, filename, shirt_index):
     cap = cv2.VideoCapture(input_path)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)  # Reduce resolution
     cap.set(cv2.CAP_PROP_FPS, 15)           # Reduce FPS
+
     try:
         detector = PoseDetector()
         cap = cv2.VideoCapture(input_path)
@@ -835,7 +836,7 @@ def download_processed(filename):
         if '..' in filename or filename.startswith('/'):
             abort(404)
         return send_from_directory(
-            os.path.abspath(app.config['PROCESSED_FOLDER']),
+            app.config['PROCESSED_FOLDER'],
             filename,
             as_attachment=True
         )
