@@ -15,7 +15,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Create form data to send the video file
         const formData = new FormData();
         const videoFile = document.getElementById('video').files[0];
-        formData.append('video', videoFile);
+//        formData.append('video', videoFile);
+        formData.append('file', videoFile);  // instead of 'video'
+
 
         try {
             // Upload the video to the server

@@ -544,10 +544,12 @@ app = Flask(__name__)
 
 # Configure paths - use relative paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
-PROCESSED_FOLDER = os.path.join(BASE_DIR, 'static', 'processed')
-SHIRT_FOLDER = os.path.join(BASE_DIR, 'static', 'shirts')
-
+# UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
+# PROCESSED_FOLDER = os.path.join(BASE_DIR, 'static', 'processed')
+# SHIRT_FOLDER = os.path.join(BASE_DIR, 'static', 'shirts')
+UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', os.path.join(BASE_DIR, 'static', 'uploads'))
+PROCESSED_FOLDER = os.getenv('PROCESSED_FOLDER', os.path.join(BASE_DIR, 'static', 'processed'))
+SHIRT_FOLDER = os.getenv('SHIRT_FOLDER', os.path.join(BASE_DIR, 'static', 'shirts'))
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['PROCESSED_FOLDER'] = PROCESSED_FOLDER
