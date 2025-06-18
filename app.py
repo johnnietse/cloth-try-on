@@ -560,28 +560,33 @@ app.config['SHIRT_FOLDER'] = SHIRT_FOLDER
 
 # Ensure directories exist with error handling
 for folder in [UPLOAD_FOLDER, PROCESSED_FOLDER, SHIRT_FOLDER]:
-    try:
-        os.makedirs(folder, exist_ok=True)
-        app.logger.info(f"Directory created or exists: {folder}")
-    except Exception as e:
-        app.logger.error(f"Failed to create directory {folder}: {str(e)}")
-        # Fallback to a simpler directory if needed
-        if folder == SHIRT_FOLDER:
-            SHIRT_FOLDER = os.path.join(BASE_DIR, 'static', 'shirts')
-            os.makedirs(SHIRT_FOLDER, exist_ok=True)
+    os.makedirs(folder, exist_ok=True)
+    # try:
+    #     os.makedirs(folder, exist_ok=True)
+    #     app.logger.info(f"Directory created or exists: {folder}")
+    # except Exception as e:
+    #     app.logger.error(f"Failed to create directory {folder}: {str(e)}")
+    #     # Fallback to a simpler directory if needed
+    #     if folder == SHIRT_FOLDER:
+    #         SHIRT_FOLDER = os.path.join(BASE_DIR, 'static', 'shirts')
+    #         os.makedirs(SHIRT_FOLDER, exist_ok=True)
 
 # Configure logging
 if not app.debug:
     log_dir = os.path.join(BASE_DIR, 'logs')
     os.makedirs(log_dir, exist_ok=True)
-    file_handler = RotatingFileHandler(
-        os.path.join(log_dir, 'app.log'),
-        maxBytes=1024 * 1024 * 10,
-        backupCount=5
-    )
-    file_handler.setFormatter(logging.Formatter(
-        '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
-    app.logger.addHandler(file_handler)
+    # file_handler = RotatingFileHandler(
+    #     os.path.join(log_dir, 'app.log'),
+    #     maxBytes=1024 * 1024 * 10,
+    #     backupCount=5
+    # )
+    # file_handler.setFormatter(logging.Formatter(
+    #     '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'))
+    # app.logger.addHandler(file_handler)
+    # app.logger.setLevel(logging.INFO)
+    handler = RotatingFileHandler(os.path.join(log_dir, 'app.log'), maxBytes=10*1024*1024, backupCount=5)
+    handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s: %(message)s'))
+    app.logger.addHandler(handler)
     app.logger.setLevel(logging.INFO)
 
 def get_db_connection():
@@ -648,7 +653,7 @@ def process_video(input_path, filename, shirt_index):
 
     try:
         detector = PoseDetector()
-        cap = cv2.VideoCapture(input_path)
+        # cap = cv2.VideoCapture(input_path)
         if not cap.isOpened():
             raise ValueError("Could not open video file")
 
@@ -656,6 +661,7 @@ def process_video(input_path, filename, shirt_index):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         processed_filename = f"processed_{timestamp}_{filename}"
         processed_path = os.path.join(app.config['PROCESSED_FOLDER'], processed_filename)
+        app.logger.info(f"Saving processed video to: {processed_path}")
 
         # Get video properties
         frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -666,8 +672,11 @@ def process_video(input_path, filename, shirt_index):
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         out = cv2.VideoWriter(processed_path, fourcc, fps, (frame_width, frame_height))
 
-        listShirts = get_shirt_list()
-        if not listShirts:
+        # listShirts = get_shirt_list()
+        shirts = get_shirt_list()
+
+        # if not listShirts:
+        if not shirts:
             raise ValueError("No shirts available for processing")
 
         while True:
@@ -680,10 +689,10 @@ def process_video(input_path, filename, shirt_index):
 
             if lmList and len(lmList) > 24:
                 # Load the shirt image
-                shirt_path = os.path.join(app.config['SHIRT_FOLDER'], listShirts[shirt_index])
+                shirt_path = os.path.join(app.config['SHIRT_FOLDER'], shirts[shirt_index])
                 imgShirt = cv2.imread(shirt_path, cv2.IMREAD_UNCHANGED)
                 if imgShirt is None:
-                    app.logger.error(f"Failed to load shirt image: {shirt_path}")
+                    # app.logger.error(f"Failed to load shirt image: {shirt_path}")
                     continue
 
                 # Extract keypoints for shoulders and hips
@@ -754,73 +763,132 @@ def process_video(input_path, filename, shirt_index):
 
 @app.route('/')
 def index():
-    """Render the main page with available shirts."""
-    try:
-        listShirts = get_shirt_list()
-        return render_template('index.html', shirts=listShirts)
-    except Exception as e:
-        app.logger.error(f"Index page failed: {str(e)}")
-        return render_template('error.html'), 500
+    shirts = get_shirt_list()
+    return render_template('index.html', shirts=shirts)
+
+    # """Render the main page with available shirts."""
+    # try:
+    #     listShirts = get_shirt_list()
+    #     return render_template('index.html', shirts=listShirts)
+    # except Exception as e:
+    #     app.logger.error(f"Index page failed: {str(e)}")
+    #     return render_template('error.html'), 500
 
 @app.route('/upload_shirt', methods=['POST'])
 def upload_shirt():
     """Handle shirt image uploads."""
     try:
-        if 'shirt_image' not in request.files:
-            return jsonify({"error": "No file part"}), 400
+        file = request.files.get('shirt_image')
+        if not file or file.filename == '':
+            return jsonify({"error": "No shirt image uploaded."}), 400
 
-        file = request.files['shirt_image']
-        if file.filename == '':
-            return jsonify({"error": "No selected file"}), 400
-
-        if file and file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
-            # Secure filename and save
-            filename = os.path.join(app.config['SHIRT_FOLDER'], file.filename)
-            file.save(filename)
-            return redirect(url_for('index'))
-
-        return jsonify({"error": "Invalid file type"}), 400
+        filename = os.path.join(app.config['SHIRT_FOLDER'], file.filename)
+        file.save(filename)
+        return redirect(url_for('index'))
     except Exception as e:
-        app.logger.error(f"Shirt upload failed: {str(e)}")
+        app.logger.error(f"upload_shirt failed: {e}")
         return jsonify({"error": "Internal server error"}), 500
+
+    #     if 'shirt_image' not in request.files:
+    #         return jsonify({"error": "No file part"}), 400
+    #
+    #     file = request.files['shirt_image']
+    #     if file.filename == '':
+    #         return jsonify({"error": "No selected file"}), 400
+    #
+    #     if file and file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+    #         # Secure filename and save
+    #         filename = os.path.join(app.config['SHIRT_FOLDER'], file.filename)
+    #         file.save(filename)
+    #         return redirect(url_for('index'))
+    #
+    #     return jsonify({"error": "Invalid file type"}), 400
+    # except Exception as e:
+    #     app.logger.error(f"Shirt upload failed: {str(e)}")
+    #     return jsonify({"error": "Internal server error"}), 500
 
 @app.route('/upload', methods=['POST'])
 def upload_video():
     """Handle video uploads and processing."""
+    # try:
+    #     if 'file' not in request.files:
+    #         return jsonify({"error": "No file part"}), 400
+    #
+    #     file = request.files['file']
+    #     if file.filename == '':
+    #         return jsonify({"error": "No selected file"}), 400
+    #
+    #     if not file.filename.lower().endswith(('.mp4', '.mov', '.avi')):
+    #         return jsonify({"error": "Invalid video format"}), 400
+    #
+    #     # Save video
+    #     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    #     filename = f"{timestamp}_{file.filename}"
+    #     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    #     file.save(filepath)
+    #
+    #     # Get shirt index safely
+    #     try:
+    #         shirt_index = int(request.form.get('shirt_index', 0))
+    #         shirt_list = get_shirt_list()
+    #         if not 0 <= shirt_index < len(shirt_list):
+    #             shirt_index = 0
+    #     except:
+    #         shirt_index = 0
+    #
+    #     processed_filepath = process_video(filepath, filename, shirt_index)
+    #     return jsonify({
+    #         "message": "Success",
+    #         "download_url": url_for('download_processed', filename=os.path.basename(processed_filepath))
+    #     })
+    # except Exception as e:
+    #     app.logger.error(f"CRASH: {str(e)}")  # Check Render logs for this
+    #     return jsonify({"error": "Processing failed", "details": str(e)}), 500
+
     try:
-        if 'file' not in request.files:
-            return jsonify({"error": "No file part"}), 400
+        file = request.files.get('file')
+        if not file or file.filename == '':
+            return jsonify({"error": "No video uploaded."}), 400
 
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({"error": "No selected file"}), 400
-
-        if not file.filename.lower().endswith(('.mp4', '.mov', '.avi')):
-            return jsonify({"error": "Invalid video format"}), 400
-
-        # Save video
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"{timestamp}_{file.filename}"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
 
-        # Get shirt index safely
-        try:
-            shirt_index = int(request.form.get('shirt_index', 0))
-            shirt_list = get_shirt_list()
-            if not 0 <= shirt_index < len(shirt_list):
-                shirt_index = 0
-        except:
+        shirt_index = int(request.form.get('shirt_index', 0))
+        shirt_list = get_shirt_list()
+        if not 0 <= shirt_index < len(shirt_list):
             shirt_index = 0
 
-        processed_filepath = process_video(filepath, filename, shirt_index)
+        processed_path = process_video(filepath, filename, shirt_index)
         return jsonify({
-            "message": "Success",
-            "download_url": url_for('download_processed', filename=os.path.basename(processed_filepath))
+            "message": "Video processed successfully!",
+            "download_url": url_for('download_processed', filename=os.path.basename(processed_path))
         })
     except Exception as e:
-        app.logger.error(f"CRASH: {str(e)}")  # Check Render logs for this
+        app.logger.error(f"upload_video failed: {e}")
         return jsonify({"error": "Processing failed", "details": str(e)}), 500
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     #     processed_filepath = process_video(filepath, filename, shirt_index)
     #     processed_url = url_for('download_processed', filename=os.path.basename(processed_filepath))
@@ -837,29 +905,57 @@ def upload_video():
 @app.route('/processed/<filename>')
 def download_processed(filename):
     """Serve processed video files."""
+    # try:
+    #     if '..' in filename or filename.startswith('/'):
+    #         abort(404)
+    #     return send_from_directory(
+    #         app.config['PROCESSED_FOLDER'],
+    #         filename,
+    #         as_attachment=True
+    #     )
+    # except Exception as e:
+    #     app.logger.error(f"Download failed: {str(e)}")
+    #     abort(404)
     try:
-        if '..' in filename or filename.startswith('/'):
+        full_path = os.path.join(app.config['PROCESSED_FOLDER'], filename)
+        if not os.path.exists(full_path):
+            app.logger.warning(f"File not found: {full_path}")
             abort(404)
-        return send_from_directory(
-            app.config['PROCESSED_FOLDER'],
-            filename,
-            as_attachment=True
-        )
+        return send_from_directory(app.config['PROCESSED_FOLDER'], filename, as_attachment=True)
     except Exception as e:
-        app.logger.error(f"Download failed: {str(e)}")
+        app.logger.error(f"download_processed failed: {e}")
         abort(404)
+
+# @app.route('/healthz')
+# def health_check():
+#     """Health check endpoint."""
+#     try:
+#         # Simple database check if using DB
+#         if os.getenv('DB_HOST') or os.getenv('DATABASE_URL'):
+#             conn = get_db_connection()
+#             conn.close()
+#         return jsonify({"status": "healthy"}), 200
+#     except Exception as e:
+#         app.logger.error(f"Health check failed: {str(e)}")
+#         return jsonify({"status": "unhealthy", "error": str(e)}), 500
+#
+# if __name__ == '__main__':
+#     debug = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
+#     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=debug)
+
+
+
+
 
 @app.route('/healthz')
 def health_check():
-    """Health check endpoint."""
     try:
-        # Simple database check if using DB
-        if os.getenv('DB_HOST') or os.getenv('DATABASE_URL'):
+        if os.getenv('DATABASE_URL') or os.getenv('DB_HOST'):
             conn = get_db_connection()
             conn.close()
         return jsonify({"status": "healthy"}), 200
     except Exception as e:
-        app.logger.error(f"Health check failed: {str(e)}")
+        app.logger.error(f"Health check failed: {e}")
         return jsonify({"status": "unhealthy", "error": str(e)}), 500
 
 if __name__ == '__main__':
