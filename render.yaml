@@ -56,6 +56,43 @@
 #    plan: free
 
 
+#
+#
+#services:
+#  - type: web
+#    name: virtual-try-on
+#    env: python
+#    region: virginia
+#    plan: free  # or standard for production
+#    buildCommand: pip install -r requirements.txt
+##    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+#    startCommand: gunicorn --config gunicorn_config.py app:app
+#
+#    envVars:
+#      - key: FLASK_APP
+#        value: app.py
+#      - key: FLASK_ENV
+#        value: production
+#      - key: UPLOAD_FOLDER
+#        value: /opt/render/project/src/static/uploads
+#      - key: PROCESSED_FOLDER
+#        value: /opt/render/project/src/static/processed
+##      - key: SHIRT_FOLDER
+##        value: /var/data/Resources/shirts
+#      - key: SHIRT_FOLDER
+#        value: /opt/render/project/src/static/shirts
+#      - key: PYTHON_VERSION
+#        value: 3.10.13  # Match your runtime
+#    disk:
+#      name: app-data
+#      mountPath: /var/data
+#      sizeGB: 1
+#
+#databases:
+#  - name: virtualtryon-db
+#    plan: free  # or starter/production for real usage
+#    region: virginia
+
 
 
 services:
@@ -63,11 +100,9 @@ services:
     name: virtual-try-on
     env: python
     region: virginia
-    plan: free  # or standard for production
-    buildCommand: pip install -r requirements.txt
-#    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt && chmod +x preinstall.sh && ./preinstall.sh
     startCommand: gunicorn --config gunicorn_config.py app:app
-
     envVars:
       - key: FLASK_APP
         value: app.py
@@ -76,13 +111,11 @@ services:
       - key: UPLOAD_FOLDER
         value: /opt/render/project/src/static/uploads
       - key: PROCESSED_FOLDER
-        value: /opt/render/project/src/static/processed
-#      - key: SHIRT_FOLDER
-#        value: /var/data/Resources/shirts
+        value: /opt/render/project/src/static/processed  # Correct path
       - key: SHIRT_FOLDER
         value: /opt/render/project/src/static/shirts
       - key: PYTHON_VERSION
-        value: 3.10.13  # Match your runtime
+        value: 3.10.13
     disk:
       name: app-data
       mountPath: /var/data
@@ -90,5 +123,5 @@ services:
 
 databases:
   - name: virtualtryon-db
-    plan: free  # or starter/production for real usage
+    plan: free
     region: virginia

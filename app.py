@@ -1131,7 +1131,9 @@ def process_video(input_path, filename, shirt_index):
 
         cap.release()
         out.release()
-        return f"processed/{processed_filename}"
+        # return f"processed/{processed_filename}"
+        return f"static/processed/{processed_filename}"  # Updated path
+
     except Exception as e:
         app.logger.error(f"process_video failed: {e}")
         raise
@@ -1173,10 +1175,15 @@ def upload_video():
             shirt_index = 0
 
         processed_path = process_video(filepath, filename, shirt_index)
+        download_url = url_for('static', filename=os.path.basename(processed_path))
+
         return jsonify({
             "message": "Video processed successfully!",
-            "download_url": url_for('download_processed', filename=os.path.basename(processed_path))
+            # "download_url": url_for('download_processed', filename=os.path.basename(processed_path))
+            "download_url": download_url  # Use the generated URL
+
         })
+
     except Exception as e:
         app.logger.error(f"upload_video failed: {e}")
         return jsonify({"error": "Processing failed", "details": str(e)}), 500
@@ -1192,6 +1199,11 @@ def download_processed(filename):
     except Exception as e:
         app.logger.error(f"download_processed failed: {e}")
         abort(404)
+
+# Add this route to serve static files
+@app.route('/static/<path:filename>')
+def static_files(filename):
+    return send_from_directory(app.config['PROCESSED_FOLDER'], filename)
 
 @app.route('/healthz')
 def health_check():

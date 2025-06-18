@@ -272,7 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event listener for the form submission (video upload)
     uploadForm.addEventListener('submit', async (event) => {
         event.preventDefault();
-
         statusMessage.innerHTML = 'Uploading video...';
 
         const formData = new FormData();
