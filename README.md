@@ -118,22 +118,19 @@ These samples demonstrate the input for the app's functionality.
 ### File Handling & Storage
 - **Filesystem Storage**: Uploaded images and processed outputs are stored in <code>static/uploads</code> and <code>static/processed</code>, respectively. 
 
-- **Direct File Serving**: Processed images are served directly from the filesystem using <code>send_from_directory</code>, eliminating the need for a database.
+- **Direct File Serving**: Processed images are served directly from the filesystem using <code>send_from_directory</code>, eliminating the need for a database. But to show you the sample clothing images, I still connect a database on Render for the deployment.
 
 ### Image Processing Pipeline
-1. **Frame Capture**: Video frames are extracted using <code>cv2.VideoCapture</code>.
 
-2. **Landmark Detection**: Shoulder/hip landmarks are identified to define target regions for clothing placement.
+1. **Landmark Detection**: Shoulder/hip landmarks are identified to define target regions for clothing placement.
 
-3. **Dynamic Clothing Adjustment**:
+2. **Dynamic Clothing Adjustment**:
 
     - Bounding Box Scaling: Expands the clothing region using a scaling factor for better coverage.
     
     - Perspective Warping: Warps the clothing image to match the user’s pose using a computed transformation matrix.
 
-4. **Transparency Blending**: Overlays the warped clothing onto each frame with adjustable opacity and green-screen removal.
-
-5. **Video Reconstruction**: Compiled into an MP4 file using <code>cv2.VideoWriter</code>.
+3. **Transparency Blending**: Overlays the warped clothing onto each frame with adjustable opacity and green-screen removal.
 
 ### Key Features
 
@@ -141,14 +138,14 @@ These samples demonstrate the input for the app's functionality.
 
 - **Error Handling**: Basic checks for file validity and pose detection failures, with JSON error responses for API routes.
 
-- **Environment Configuration**: Uses <code>python-dotenv</code> for environment variables (if needed), though PostgreSQL integration is currently inactive.
+- **Environment Configuration**: Uses <code>python-dotenv</code> for environment variables (if needed), including PostgreSQL integration.
 
 ### Dependencies
 - **Core Libraries**:
     
     - <code>Flask</code>: Web framework.
     
-    - <code>OpenCV (cv2)</code>: Video/image processing.
+    - <code>OpenCV (cv2)</code>: Image processing.
     
     - <code>cvzone</code>: Pose detection utilities.
     
@@ -159,7 +156,7 @@ These samples demonstrate the input for the app's functionality.
 ### Deployment Notes
 - **Development Mode**: Runs with <code>debug=True</code> for easy testing (not suitable for production).
 
-- **Scalability**: Designed for filesystem storage, making it deployable to platforms like Heroku or Render with ephemeral storage. For production, consider cloud storage (AWS S3) and a task queue (Celery) for video processing.
+- **Scalability**: Designed for filesystem storage, making it deployable to platforms like Heroku or Render with ephemeral storage. 
 
 ---
 
