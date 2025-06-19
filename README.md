@@ -204,20 +204,21 @@ gunicorn --config gunicorn_config.py app:app
 ```
 
 ### 5. Add environment variables under "Environment" tab:
-Key	Value
-DATABASE_URL 	
-DB_HOST	
-DB_NAME	
-DB_PASSWORD	[Your database password]
-DB_PORT	
-DB_USER	
-FLASK_APP	app.py
-FLASK_DEBUG	0
-FLASK_ENV	production
-PROCESSED_FOLDER	[Your processed folder path]
-PYTHON_VERSION	3.10.12
-SHIRT_FOLDER	[Your shirt folder path]
-UPLOAD_FOLDER	[Your upload folder path]
+| Key                | Value                                                                 |
+|--------------------|-----------------------------------------------------------------------|
+| DATABASE_URL       | `postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}`  |
+| DB_HOST            | `[Your database hostname]`                                            |
+| DB_NAME            | `[Your database name]`                                                |
+| DB_PASSWORD        | `[Your database password]`                                            |
+| DB_PORT            | `[Your database port #]`                                              |
+| DB_USER            | `[Your database username]`                                            |
+| FLASK_APP          | `app.py`                                                              |
+| FLASK_DEBUG        | `0`                                                                   | 
+| FLASK_ENV          | `production`                                                          |
+| PROCESSED_FOLDER   | `[Your processed folder path]`                                        |
+| PYTHON_VERSION     | `3.10.12`                                                             |
+| SHIRT_FOLDER       | `[Your shirt folder path]`                                            |
+| UPLOAD_FOLDER      | `[Your upload folder path]`                                           |
 
 
 ### 6. Click "Create Web Service"
