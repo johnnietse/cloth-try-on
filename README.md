@@ -1,12 +1,12 @@
 # Virtual Clothing Try-On Web App
 
-This is a web app that allows users to upload an image of their chosen clothing (with the background removed) and a video of themselves (one person, facing the camera) to virtually try on the clothing. After uploading the necessary files and selecting the desired clothing, users can generate a video where the selected clothing is applied to their image.
+This is a web app that allows users to upload an image of their chosen clothing (with the background removed) and an image of themselves (one person, facing the camera) to virtually try on the clothing. After uploading the necessary files and selecting the desired clothing, users can generate an image where the selected clothing is applied to their image.
 
 ### Key Features:
 - **Upload Clothing Image**: Users can upload an image of clothing with the background removed (e.g., PNG format).
-- **Upload Personal Video**: Users upload a video of themselves facing the camera.
-- **Virtual Try-On**: The app combines the uploaded video and clothing image to generate a video of the clothing virtually fitting the user.
-- **Download Processed Video**: After processing, users are notified when the video is ready for download, with a link to download the final video.
+- **Upload Personal Image**: Users upload an image of themselves facing the camera.
+- **Virtual Try-On**: The app combines the uploaded image and clothing image to generate a image of the clothing virtually fitting the user.
+- **Download Processed Image**: After processing, users are notified when the image is ready for download, with a link to download the final image.
 
 ## Prerequisites
 
