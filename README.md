@@ -157,6 +157,111 @@ These samples demonstrate the input for the app's functionality.
 This revised technical overview reflects the current codebase’s focus on filesystem-based storage, advanced perspective warping, and dynamic clothing management. 
 
 ---
+
+## Virtual Clothing Try-On Web App Deployment Guide
+
+This guide walks you through setting up the PostgreSQL database and deploying the Flask web application on Render.
+
+### Prerequisites
+- Render account
+- GitHub account with repository access
+- Credit card (for database persistence beyond free tier)
+
+### 1. Database Setup on Render
+1. Go to [Render Dashboard](https://dashboard.render.com/)
+2. Click "New +" → Select "PostgreSQL"
+3. Configure database:
+   - **Name**: `cloth-try-on-db` (could be rename to anything)
+   - **Region**: `Virginia (US East)` (could be anything)
+   - **PostgreSQL Version**: `16`
+   - **Instance Type**: `Free` (upgrade later if needed)
+4. Click "Create Database"
+5. Wait for database to become `available` (takes 2-3 minutes)
+6. Note these connection details from the "Connect" tab:
+
+### 2. Web Service Deployment
+1. In Render Dashboard, click "New +" → Select "Web Service"
+2. Connect your GitHub repository:
+- Select `johnnietse/cloth-try-on` (this will vary depending on how you name your github repository)
+- Choose branch: `main` (this will vary too depending on how you name your branch, but usually the branch will come will the naming of "main")
+
+### 3. Configure service:
+- **Name**: `virtual-try-on` (could be rename to anything)
+- **Region**: `Virginia (US East)` (could be anything)
+- **Instance Type**: `Free` (upgrade later if needed)
+
+### 4. Set build commands:
+- Build Command:
+```bash
+pip install --upgrade pip && 
+pip install -r requirements.txt && 
+chmod +x preinstall.sh && 
+./preinstall.sh
+```
+- Start Command:
+```bash
+gunicorn --config gunicorn_config.py app:app
+```
+
+### 5. Add environment variables under "Environment" tab:
+Key	Value
+DATABASE_URL 	
+DB_HOST	
+DB_NAME	
+DB_PASSWORD	[Your database password]
+DB_PORT	
+DB_USER	
+FLASK_APP	app.py
+FLASK_DEBUG	0
+FLASK_ENV	production
+PROCESSED_FOLDER	[Your processed folder path]
+PYTHON_VERSION	3.10.12
+SHIRT_FOLDER	[Your shirt folder path]
+UPLOAD_FOLDER	[Your upload folder path]
+
+
+### 6. Click "Create Web Service"
+
+### 7. Post-Deployment
+First build will take 5-10 minutes (installs dependencies and runs preinstall.sh). Health check endpoint: /healthz
+
+
+### 8. Maintenance
+- Database Backups: Free tier doesn't include automatic backups. Upgrade for backup functionality
+- Web Service:
+  - Free instances sleep after 15 minutes inactivity
+  - Wake-up takes 30-60 seconds
+- To update deployment:
+  1. Push changes to main branch
+  2. Render will auto-deploy updates
+
+### 9. Troubleshooting
+1. Check build logs in Render dashboard
+2. Verify all environment variables are set correctly
+3. Ensure database is in "available" state
+4. Check free tier resource limits (storage, RAM, CPU)
+
+
+### Key Notes:
+1. **Database Security**: 
+   - Your current `0.0.0.0/0` access rule allows global connections
+   - For production: Restrict to Render's IP ranges or use private networking
+
+2. **Environment Variables**:
+   - Replace bracketed values `[ ]` with actual credentials/paths
+   - The `DATABASE_URL` should follow format: `postgresql://USER:PASSWORD@HOST:PORT/DATABASE`
+
+3. **Free Tier Limitations**:
+   - Database: Auto-deletes after 90 days
+   - Web Service: Sleeps when inactive
+   - Storage: Limited to 1GB (monitor usage in dashboard)
+
+4. **Preinstall Script**:
+   - Ensure `preinstall.sh` has necessary permissions in your repo
+   - Include any model downloads/asset preparations here
+
+---
+
 ## 🎥 Demo Video
 A short walkthrough of the application is available below.
 
