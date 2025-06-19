@@ -65,41 +65,38 @@ Once the server is running, open your web browser and go to the following URL:
 ```bash
 http://127.0.0.1:5000
 ```
-You should see the web app interface where you can upload your clothing image and personal video.
+You should see the web app interface where you can upload your clothing image and personal image.
 
 ### 3. Upload Files and Process:
 - Upload your **clothing image** (make sure the background is removed).
-- Upload your **personal video** (where you are facing the camera).
+- Upload your **personal image** (where you are facing the camera).
 - Select the clothing item you want to try on.
-- Click the **"Upload and Process"** button to generate the virtual try-on video.
+- Click the **"Upload and Process"** button to generate the virtual try-on image.
   
-### 4. Download the Processed Video:
-Once the video has been processed, you will see a message:
+### 4. Download the Processed Image:
+Once the image has been processed, you will see a button where it will ask you to download the image:
 
 ```bash
-Video processing complete! Click the link below to download.
+Click on the **"Download Processed Image"** button to download the generated image.
 ```
-
-Click on the **"Download Processed Video"** button to download the generated video.
 
 ## Sample Files
 To get an idea of how the app works, you can look at the following sample files within the repository:
 
-- Clothing Images: Sample clothing images can be found in the **Resources/Shirts** folder.
-- Uploaded Videos: Sample user videos can be found in the **static/uploads** folder.
-- Processed Videos: Sample processed virtual clothing try-on videos are available in the **static/processed** folder.
+- Clothing Images: Sample clothing images can be found in the **static/shirts** folder.
 
-These samples demonstrate the input and output for the app's functionality.
+These samples demonstrate the input for the app's functionality.
 
 ## Future Considerations
-- Deployment to a cloud platform (e.g., Render, Heroku, AWS).
+- (Completed) Deployment to a cloud platform (e.g., Render, Heroku, AWS).
 - Enhancements to virtual clothing fitting (e.g., improved image processing and fit accuracy).
-- Support for multiple clothing items or different video orientations.
+- Support for multiple clothing items or different image orientations.
 
 ---
 
 ## 📸 Screenshot
-![virtual-try-on](https://github.com/user-attachments/assets/abc117df-a0ee-4a15-ac30-6964c31e48e4)
+![Screenshot (3615)](https://github.com/user-attachments/assets/697d0201-84e0-41e2-884b-6249c9a28338)
+![Screenshot (3614)](https://github.com/user-attachments/assets/9c4635e9-cb8b-4fe1-ad7d-99b5911be6c1)
 
 ---
 
@@ -107,9 +104,9 @@ These samples demonstrate the input and output for the app's functionality.
 
 ### Backend Framework
 
-- **Flask**: Powers the web app with routes for uploading videos/shirts, processing, and downloads. Uses <code>render_template</code> for dynamic HTML rendering and <code>send_from_directory</code> for file delivery.
+- **Flask**: Powers the web app with routes for uploading images/shirts, processing, and downloads. Uses <code>render_template</code> for dynamic HTML rendering and <code>send_from_directory</code> for file delivery.
 
-- **Dynamic Shirt Management**: Shirt images are stored in <code>Resources/Shirts</code> and fetched dynamically via <code>get_shirt_list()</code> for real-time updates.
+- **Dynamic Shirt Management**: Shirt images are stored in <code>static/shirts</code> and fetched dynamically via <code>get_shirt_list()</code> for real-time updates.
 
 ### Pose Detection & Advanced Image Processing
 - **Pose Detection**: Leverages <code>cvzone.PoseModule</code> to detect body landmarks (shoulders, hips) for precise clothing placement.
@@ -119,11 +116,11 @@ These samples demonstrate the input and output for the app's functionality.
 - **Green Screen Removal**: The <code>overlay_transparent</code> function removes green backgrounds from clothing images while applying semi-transparency for natural blending.
 
 ### File Handling & Storage
-- **Filesystem Storage**: Uploaded videos and processed outputs are stored in <code>static/uploads</code> and <code>static/processed</code>, respectively. Filenames include timestamps to avoid collisions.
+- **Filesystem Storage**: Uploaded images and processed outputs are stored in <code>static/uploads</code> and <code>static/processed</code>, respectively. 
 
-- **Direct File Serving**: Processed videos are served directly from the filesystem using <code>send_from_directory</code>, eliminating the need for a database.
+- **Direct File Serving**: Processed images are served directly from the filesystem using <code>send_from_directory</code>, eliminating the need for a database.
 
-### Video Processing Pipeline
+### Image Processing Pipeline
 1. **Frame Capture**: Video frames are extracted using <code>cv2.VideoCapture</code>.
 
 2. **Landmark Detection**: Shoulder/hip landmarks are identified to define target regions for clothing placement.
@@ -176,5 +173,4 @@ A short walkthrough of the application is available below.
 https://youtu.be/Xz_QCwU1M5I
 
 
-![Screenshot (3615)](https://github.com/user-attachments/assets/697d0201-84e0-41e2-884b-6249c9a28338)
-![Screenshot (3614)](https://github.com/user-attachments/assets/9c4635e9-cb8b-4fe1-ad7d-99b5911be6c1)
+
