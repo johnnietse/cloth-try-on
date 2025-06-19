@@ -83,7 +83,7 @@ Click on the **"Download Processed Image"** button to download the generated ima
 ## Sample Files
 To get an idea of how the app works, you can look at the following sample files within the repository:
 
-- Clothing Images: Sample clothing images can be found in the **static/shirts** folder.
+- Clothing Images: Sample clothing images can be found in the `static/shirts` folder.
 
 These samples demonstrate the input for the app's functionality.
 
@@ -220,7 +220,7 @@ gunicorn --config gunicorn_config.py app:app
 | SHIRT_FOLDER       | `[Your shirt folder path]`                                            |
 | UPLOAD_FOLDER      | `[Your upload folder path]`                                           |
 
-Note that since it is an internal deployment on Render (not an external deployment) as the POSTGRESQL database can also be used externally too, I used the Internal Database URL instead of the External Database URL.
+Note that since it is an internal deployment on Render (not an external deployment) as the POSTGRESQL database can also be used externally too, I fill in the Internal Database URL into the `DATABASE_URL` key instead of the External Database URL.
 
 ### 6. Click "Create Web Service"
 
