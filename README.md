@@ -174,3 +174,7 @@ A short walkthrough of the application is available below.
 
 ▶️ Watch the full demo here:
 https://youtu.be/Xz_QCwU1M5I
+
+
+![Screenshot (3615)](https://github.com/user-attachments/assets/697d0201-84e0-41e2-884b-6249c9a28338)
+![Screenshot (3614)](https://github.com/user-attachments/assets/9c4635e9-cb8b-4fe1-ad7d-99b5911be6c1)
