@@ -220,6 +220,7 @@ gunicorn --config gunicorn_config.py app:app
 | SHIRT_FOLDER       | `[Your shirt folder path]`                                            |
 | UPLOAD_FOLDER      | `[Your upload folder path]`                                           |
 
+Note that since it is an internal deployment on Render (not an external deployment) as the POSTGRESQL database can also be used externally too, I used the Internal Database URL instead of the External Database URL.
 
 ### 6. Click "Create Web Service"
 
