@@ -277,3 +277,22 @@ https://youtu.be/D6o0jcurhUA
 
 ![Screenshot (3616)](https://github.com/user-attachments/assets/0d149714-96fa-4f23-bee0-7f657e9567bd)
 ![Screenshot (3617)](https://github.com/user-attachments/assets/325ef83e-ef4a-4542-a53d-c5a38dfb2439)
+
+
+---
+
+🎬 Video Processing Version Now Available!
+We are excited to announce that video support is now available in a separate repository! You can now process full-movement sequences where users upload videos of themselves instead of static images.
+
+Access the video processing version here:
+👉 Virtual Clothing Try-On (Video Version) -> https://github.com/johnnietse/cloth-virtual-try-on.git
+
+Key differences from this image version:
+- Video input support: Users upload MP4/WebM videos (single person, facing camera)
+- Frame-by-frame processing: Applies virtual try-on to every video frame
+- Animated results: Generates downloadable video files showing clothing in motion
+- Temporal smoothing: Maintains consistency between frames for natural movement
+
+Both repositories share the same core technology, but the video version includes additional:
+- Video decoding/encoding pipelines
+- Motion stabilization techniques
