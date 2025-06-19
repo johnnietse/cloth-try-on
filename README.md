@@ -128,7 +128,7 @@ These samples demonstrate the input for the app's functionality.
 
 ### Key Features
 
-- **Dynamic Shirt Uploads**: Users can upload new clothing images (PNG/JPG) via <code>/upload_shirt</code>, which are immediately available for try-on.
+- **Dynamic Shirt Uploads**: Users can upload new clothing images (PNG/JPG/JPEG) via <code>/upload_shirt</code>, which are immediately available for try-on.
 
 - **Error Handling**: Basic checks for file validity and pose detection failures, with JSON error responses for API routes.
 
