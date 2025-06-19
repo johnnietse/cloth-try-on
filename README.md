@@ -172,7 +172,7 @@ This guide walks you through setting up the PostgreSQL database and deploying th
 2. Click "New +" → Select "PostgreSQL"
 3. Configure database:
    - **Name**: `cloth-try-on-db` (could be rename to anything)
-   - **Region**: `Virginia (US East)` (could be anything)
+   - **Region**: `Virginia (US East)` (could be any region)
    - **PostgreSQL Version**: `16`
    - **Instance Type**: `Free` (upgrade later if needed)
 4. Click "Create Database"
@@ -187,7 +187,7 @@ This guide walks you through setting up the PostgreSQL database and deploying th
 
 ## 3. Configure service:
 - **Name**: `virtual-try-on` (could be rename to anything)
-- **Region**: `Virginia (US East)` (could be anything)
+- **Region**: `Virginia (US East)` (could be any region)
 - **Instance Type**: `Free` (upgrade later if needed)
 
 ## 4. Set build commands:
