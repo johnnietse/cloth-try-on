@@ -285,7 +285,7 @@ https://youtu.be/D6o0jcurhUA
 We are excited to announce that video support is now available in a separate repository! You can now process full-movement sequences where users upload videos of themselves instead of static images.
 
 Access the video processing version here:
-👉 Virtual Clothing Try-On (Video Version) -> https://github.com/johnnietse/cloth-virtual-try-on.git
+👉 Virtual Clothing Try-On Web App (Video Version) -> https://github.com/johnnietse/cloth-virtual-try-on.git
 
 Key differences from this image version:
 - Video input support: Users upload MP4/WebM videos (single person, facing camera)
