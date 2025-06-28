@@ -21,8 +21,8 @@ cd /path/to/your/directory
 
 ### 1. Clone the repository:
 ```bash
-git clone https://github.com/johnnietse/cloth-virtual-try-on.git
-cd cloth-virtual-try-on
+git clone https://github.com/johnnietse/cloth-try-on.git
+cd cloth-try-on
 ```
 
 ### 2. Set up a virtual environment:
