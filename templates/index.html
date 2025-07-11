@@ -666,7 +666,10 @@
                             </div>
 
                             <h4 class="mt-4 mb-3"><i class="fas fa-tshirt me-2"></i>Select a Shirt</h4>
-                            <div class="shirt-selection">
+
+
+                            
+<!--                             <div class="shirt-selection">
                                 {% for shirt in shirts %}
                                 <div class="shirt-item {% if loop.index0 == 0 %}selected{% endif %}">
                                     <label>
@@ -681,7 +684,28 @@
                                 <button type="submit" class="btn btn-primary btn-lg">
                                     <i class="fas fa-magic me-2"></i>Try It On!
                                 </button>
+                            </div> -->
+
+                            <div class="shirt-selection">
+                                {% for shirt in shirts %}
+                                <div class="shirt-item {% if loop.index0 == 0 %}selected{% endif %}">
+                                    <label>
+                                        <input type="radio" name="shirt_index" value="{{ loop.index0 }}" {% if loop.index0 == 0 %}checked{% endif %} hidden>
+                                        <img src="/static/shirts/{{ shirt }}" alt="{{ shirt }}">
+                                    </label>
+                                    <button class="shirt-delete-btn" data-filename="{{ shirt }}" title="Delete this design">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                {% endfor %}
                             </div>
+                
+                            <div class="text-center mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-magic me-2"></i>Try It On!
+                                </button>
+                            </div>
+                            
                         </form>
                     </div>
                 </div>
