@@ -7,6 +7,8 @@ from flask import Flask, request, render_template, send_from_directory, jsonify,
 from cvzone.PoseModule import PoseDetector
 import logging
 from logging.handlers import RotatingFileHandler
+import shutil
+
 
 # OpenCV compatibility workaround
 np.int = int
@@ -49,6 +51,32 @@ def get_shirt_list():
     except Exception as e:
         app.logger.error(f"get_shirt_list failed: {e}")
         return []
+
+
+@app.route('/delete_shirt/<filename>', methods=['DELETE'])
+def delete_shirt(filename):
+    try:
+        # Secure the filename
+        if '..' in filename or filename.startswith('/'):
+            return jsonify({"error": "Invalid filename"}), 400
+        
+        shirt_path = os.path.join(app.config['SHIRT_FOLDER'], filename)
+        
+        # Create backup before deleting
+        backup_dir = os.path.join(BASE_DIR, 'static', 'deleted_shirts')
+        os.makedirs(backup_dir, exist_ok=True)
+        backup_path = os.path.join(backup_dir, f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}")
+        
+        if os.path.exists(shirt_path):
+            # Move to backup instead of permanent delete
+            shutil.move(shirt_path, backup_path)
+            return jsonify({"success": True})
+        else:
+            return jsonify({"error": "File not found"}), 404
+    except Exception as e:
+        app.logger.error(f"delete_shirt failed: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
 
 
 def overlay_transparent(background, overlay, alpha_blend=0.7):
