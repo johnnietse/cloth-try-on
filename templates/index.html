@@ -509,11 +509,11 @@
         
         input[type="file"]::file-selector-button:hover {
             background-color: var(--primary-dark);
+            color: white;
         }
         
         body.light input[type="file"]::file-selector-button {
             background-color: var(--primary);
-            color: white;
         }
 
 
@@ -522,6 +522,22 @@
         body:not(.light) .form-label {
             color: var(--text-light);
         }
+
+        /* Fix for card headers and small descriptions in dark mode */
+        body:not(.light) .card-header {
+            color: var(--text-light);
+        }
+        
+        body:not(.light) .form-text {
+            color: var(--text-light);
+        }
+
+
+        body:not(.light) .card-header i {
+            color: var(--text-light);
+        }
+
+
 
 
     </style>
