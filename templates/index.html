@@ -495,22 +495,7 @@
             color: var(--text-dark);
         }
         
-        input[type="file"]::file-selector-button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            margin-right: 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: var(--transition);
-            font-weight: 600;
-        }
-        
-        input[type="file"]::file-selector-button:hover {
-            background-color: var(--primary-dark);
-            color: white;
-        }
+
         
         body.light input[type="file"]::file-selector-button {
             background-color: var(--primary);
@@ -554,6 +539,24 @@
         
         body.light i {
             color: var(--text-dark);
+        }
+
+
+        input[type="file"]::file-selector-button {
+            background-color: white; /* Or transparent if you want */
+            color: var(--primary);   /* <-- Make text purple */
+            border: 2px solid var(--primary);
+            padding: 8px 16px;
+            margin-right: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+        }
+        
+        input[type="file"]::file-selector-button:hover {
+            background-color: var(--primary);
+            color: white;
         }
 
 
