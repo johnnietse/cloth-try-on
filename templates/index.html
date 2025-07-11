@@ -514,6 +514,7 @@
         
         body.light input[type="file"]::file-selector-button {
             background-color: var(--primary);
+            color: white;
         }
 
 
@@ -536,6 +537,25 @@
         body:not(.light) .card-header i {
             color: var(--text-light);
         }
+
+        /* Fix "Select a Shirt" heading and icon in dark mode */
+        body:not(.light) h4 {
+            color: var(--text-light);
+        }
+        
+        body:not(.light) h4 i {
+            color: var(--text-light); /* Or use var(--primary) for a pop of color */
+        }
+
+
+        body:not(.light) i {
+            color: var(--text-light);
+        }
+        
+        body.light i {
+            color: var(--text-dark);
+        }
+
 
 
 
