@@ -477,13 +477,6 @@
             }
         }
 
-
-
-
-        
-
-
-
         /* NEW: Light color labels in dark mode */
         body:not(.light) .form-label {
             color: var(--text-light);
@@ -521,12 +514,19 @@
             color: var(--text-dark);
         }
 
-
-
-
-
-
-
+        /* File upload button styles */
+        input[type="file"]::file-selector-button {
+            background-color: black;         /* Dark background in dark mode */
+            color: white;                    /* White text */
+            border: none;
+            padding: 8px 16px;
+            margin-right: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+        }
+        
     </style>
 </head>
 <body class="dark">
