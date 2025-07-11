@@ -534,12 +534,18 @@
     <nav class="navbar navbar-expand-lg">
         <div class="container d-flex justify-content-between align-items-center">
             <a class="navbar-brand" href="#"><i class="fas fa-tshirt"></i> Virtual Try-On</a>
-                <div class="d-flex align-items-center">
-                  <button id="themeSwitcher" class="btn ms-2">
-                    <i class="fas fa-moon"></i>
-                  </button>
-                </div>
             
+            <!-- Hamburger toggle (for mobile) -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+              aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+              <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="d-flex align-items-center">
+                <button id="themeSwitcher" class="btn ms-2">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 
@@ -551,6 +557,7 @@
                     </li>
                 </ul>
             </div>
+            
         </div>
     </nav>
 
