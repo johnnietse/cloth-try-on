@@ -1001,15 +1001,24 @@
 
 
 
-        // Handle shirt selection
-        shirtItems.forEach((item, index) => {
+        // // Handle shirt selection
+        // shirtItems.forEach((item, index) => {
+        //     item.addEventListener('click', () => {
+        //         shirtItems.forEach(i => i.classList.remove('selected'));
+        //         item.classList.add('selected');
+        //         shirtRadios[index].checked = true;
+        //     });
+        // });
+
+        shirtItems.forEach(item => {
             item.addEventListener('click', () => {
                 shirtItems.forEach(i => i.classList.remove('selected'));
                 item.classList.add('selected');
-                shirtRadios[index].checked = true;
+                const radio = item.querySelector('input[type="radio"]');
+                if (radio) radio.checked = true;
             });
         });
-
+                
         // Preview user image
         userImageInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -1028,16 +1037,23 @@
         uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // Show processing message
-            processingMessage.style.display = 'block';
-            resultContainer.style.display = 'none';
+            // // Show processing message
+            // processingMessage.style.display = 'block';
+            // resultContainer.style.display = 'none';
             
-            // Scroll to processing message
-            processingMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // // Scroll to processing message
+            // processingMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
             
-            // Update step indicator
-            steps[0].classList.remove('active');
-            steps[1].classList.add('active');
+            // // Update step indicator
+            // steps[0].classList.remove('active');
+            // steps[1].classList.add('active');
+
+            // Show processing modal
+            const processingModal = new bootstrap.Modal(document.getElementById('processingModal'));
+            processingModal.show();
+            
+
+            
 
             const formData = new FormData(uploadForm);
 
@@ -1049,32 +1065,44 @@
 
                 const result = await response.json();
 
-                if (response.ok && result.success) {
+                if (result.success) {
                     resultImage.src = result.processed_url;
                     downloadLink.href = result.processed_url;
                     downloadLink.download = `virtual-tryon-${Date.now()}.jpg`;
 
                     // Hide processing, show result
-                    setTimeout(() => {
-                        processingMessage.style.display = 'none';
-                        resultContainer.style.display = 'block';
-                        resultContainer.scrollIntoView({ behavior: 'smooth' });
-                        
-                        // Update step indicator
-                        steps[1].classList.remove('active');
-                        steps[2].classList.add('active');
-                    }, 1000);
+                    processingModal.hide();
+                    resultContainer.style.display = 'block';
+                    resultContainer.scrollIntoView({ behavior: 'smooth' });
                 } else {
                     throw new Error(result.error || 'Image processing failed');
                 }
             } catch (error) {
-                processingMessage.style.display = 'none';
+                processingModal.hide();
                 alert('Error: ' + error.message);
-                
-                // Reset step indicator
-                steps[1].classList.remove('active');
-                steps[0].classList.add('active');
             }
+                    
+            //         // Hide processing, show result
+            //         setTimeout(() => {
+            //             processingMessage.style.display = 'none';
+            //             resultContainer.style.display = 'block';
+            //             resultContainer.scrollIntoView({ behavior: 'smooth' });
+                        
+            //             // Update step indicator
+            //             steps[1].classList.remove('active');
+            //             steps[2].classList.add('active');
+            //         }, 1000);
+            //     } else {
+            //         throw new Error(result.error || 'Image processing failed');
+            //     }
+            // } catch (error) {
+            //     processingMessage.style.display = 'none';
+            //     alert('Error: ' + error.message);
+                
+            //     // Reset step indicator
+            //     steps[1].classList.remove('active');
+            //     steps[0].classList.add('active');
+            // }
         });
 
         // Theme switcher
@@ -1083,9 +1111,9 @@
 
         const updateIcon = () => {
             if (body.classList.contains("dark")) {
-                themeSwitcher.innerHTML = '<i class="fas fa-moon"></i>';
-            } else {
                 themeSwitcher.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                themeSwitcher.innerHTML = '<i class="fas fa-moon"></i>';
             }
         };
 
@@ -1119,6 +1147,20 @@
         const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
         let shirtToDelete = null;
 
+        // Add this function to reload shirts
+        function reloadShirts() {
+            fetch('/')
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newShirtSelection = doc.querySelector('.shirt-selection');
+                    if (newShirtSelection) {
+                        document.querySelector('.shirt-selection').innerHTML = newShirtSelection.innerHTML;
+                    }
+                });
+        }
+        
         // Add this function to handle shirt deletion
         function handleShirtDeletion() {
             if (!shirtToDelete) return;
@@ -1129,31 +1171,42 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Remove the shirt from UI
-                    document.querySelectorAll('.shirt-item').forEach(item => {
-                        if (item.querySelector('img').src.includes(shirtToDelete)) {
-                            item.remove();
-                        }
-                    });
-                    
-                    // Update radio buttons
-                    const firstShirt = document.querySelector('.shirt-item');
-                    if (firstShirt) {
-                        firstShirt.classList.add('selected');
-                        firstShirt.querySelector('input[type="radio"]').checked = true;
-                    }
+                    reloadShirts();  // Reload shirt list
                 } else {
                     alert('Error: ' + (data.error || 'Failed to delete shirt'));
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while deleting the shirt.');
             })
             .finally(() => {
                 shirtToDelete = null;
                 deleteConfirmModal.hide();
             });
+                
+            //     if (data.success) {
+            //         // Remove the shirt from UI
+            //         document.querySelectorAll('.shirt-item').forEach(item => {
+            //             if (item.querySelector('img').src.includes(shirtToDelete)) {
+            //                 item.remove();
+            //             }
+            //         });
+                    
+            //         // Update radio buttons
+            //         const firstShirt = document.querySelector('.shirt-item');
+            //         if (firstShirt) {
+            //             firstShirt.classList.add('selected');
+            //             firstShirt.querySelector('input[type="radio"]').checked = true;
+            //         }
+            //     } else {
+            //         alert('Error: ' + (data.error || 'Failed to delete shirt'));
+            //     }
+            // })
+            // .catch(error => {
+            //     console.error('Error:', error);
+            //     alert('An error occurred while deleting the shirt.');
+            // })
+            // .finally(() => {
+            //     shirtToDelete = null;
+            //     deleteConfirmModal.hide();
+            // });
         }
 
         // Add this event listener for delete buttons
