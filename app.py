@@ -98,10 +98,17 @@ def overlay_transparent(background, overlay, alpha_blend=0.7):
             b, g, r = cv2.split(overlay)
             a = np.ones_like(b) * 255
 
-        green_mask = (g > 150) & (r < 100) & (b < 100)
+        # Improved green screen 
+        green_mask = (g > 180) & (r < 120) & (b < 120)
         a[green_mask] = 0
 
-        alpha = (a / 255.0) * alpha_blend
+        # Create mask and inverse mask
+        alpha = a.astype(float) / 255
+        alpha = alpha * alpha_blend
+        alpha_inv = 1.0 - alpha
+
+        # alpha = (a / 255.0) * alpha_blend
+        
         for c in range(3):
             background[:, :, c] = (alpha * overlay[:, :, c] +
                                    (1 - alpha) * background[:, :, c])
@@ -118,7 +125,7 @@ def process_image(user_image_path, shirt_index):
     if img is None:
         raise ValueError("Failed to load user image")
 
-    img = detector.findPose(img)
+    img = detector.findPose(img, draw=False)
     lmList, bboxInfo = detector.findPosition(img, bboxWithHands=False, draw=False)
 
     shirts = get_shirt_list()
@@ -137,20 +144,49 @@ def process_image(user_image_path, shirt_index):
         left_hip = np.array(lmList[23][1:3])
         right_hip = np.array(lmList[24][1:3])
 
-        # Calculate center
-        center_x = np.mean([left_shoulder[0], right_shoulder[0], left_hip[0], right_hip[0]])
-        center_y = np.mean([left_shoulder[1], right_shoulder[1], left_hip[1], right_hip[1]])
-        scale = 1.5
+        # Calculate torso dimensions with better scaling
+        torso_width = np.linalg.norm(left_shoulder - right_shoulder) * 1.2
+        torso_height = np.linalg.norm(left_shoulder - left_hip) * 1.3
+        
+        # # Calculate center
+        # center_x = np.mean([left_shoulder[0], right_shoulder[0], left_hip[0], right_hip[0]])
+        # center_y = np.mean([left_shoulder[1], right_shoulder[1], left_hip[1], right_hip[1]])
+        # scale = 1.5
 
-        # Calculate dimensions
-        shoulder_width = abs(left_shoulder[0] - right_shoulder[0]) * scale
-        hip_height = abs(left_hip[1] - left_shoulder[1]) * scale
+        # # Calculate dimensions
+        # shoulder_width = abs(left_shoulder[0] - right_shoulder[0]) * scale
+        # hip_height = abs(left_hip[1] - left_shoulder[1]) * scale
 
-        # Define points
-        left_shoulder = [center_x - shoulder_width / 2, center_y - hip_height / 2]
-        right_shoulder = [center_x + shoulder_width / 2, center_y - hip_height / 2]
-        left_hip = [center_x - shoulder_width / 2, center_y + hip_height / 2]
-        right_hip = [center_x + shoulder_width / 2, center_y + hip_height / 2]
+        # # Define points
+        # left_shoulder = [center_x - shoulder_width / 2, center_y - hip_height / 2]
+        # right_shoulder = [center_x + shoulder_width / 2, center_y - hip_height / 2]
+        # left_hip = [center_x - shoulder_width / 2, center_y + hip_height / 2]
+        # right_hip = [center_x + shoulder_width / 2, center_y + hip_height / 2]
+
+        # # Perspective transformation
+        # src_pts = np.float32([
+        #     [0, 0],
+        #     [imgShirt.shape[1], 0],
+        #     [imgShirt.shape[1], imgShirt.shape[0]],
+        #     [0, imgShirt.shape[0]]
+        # ])
+
+        # dst_pts = np.float32([
+        #     [left_shoulder[0], left_shoulder[1] + 30],
+        #     [right_shoulder[0], right_shoulder[1] + 30],
+        #     [right_hip[0], right_hip[1]],
+        #     [left_hip[0], left_hip[1]]
+        # ])
+
+        # Calculate shirt position
+        center_x = int((left_shoulder[0] + right_shoulder[0]) / 2)
+        center_y = int((left_shoulder[1] + left_hip[1]) / 2)
+        
+        # Define points with better positioning
+        shirt_top_left = [int(center_x - torso_width/2), int(center_y - torso_height/2)]
+        shirt_top_right = [int(center_x + torso_width/2), int(center_y - torso_height/2)]
+        shirt_bottom_right = [int(center_x + torso_width/2), int(center_y + torso_height/2)]
+        shirt_bottom_left = [int(center_x - torso_width/2), int(center_y + torso_height/2)]
 
         # Perspective transformation
         src_pts = np.float32([
@@ -161,10 +197,10 @@ def process_image(user_image_path, shirt_index):
         ])
 
         dst_pts = np.float32([
-            [left_shoulder[0], left_shoulder[1] + 30],
-            [right_shoulder[0], right_shoulder[1] + 30],
-            [right_hip[0], right_hip[1]],
-            [left_hip[0], left_hip[1]]
+            shirt_top_left,
+            shirt_top_right,
+            shirt_bottom_right,
+            shirt_bottom_left
         ])
 
         matrix = cv2.getPerspectiveTransform(src_pts, dst_pts)
