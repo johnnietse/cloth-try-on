@@ -609,7 +609,7 @@
             <a class="navbar-brand" href="#"><i class="fas fa-tshirt"></i> Virtual Try-On</a>
                 <div class="d-flex align-items-center">
                   <button id="themeSwitcher" class="btn ms-2">
-                    <i class="fas fa-moon"></i>
+                    <i class="fas fa-sun"></i>
                   </button>
                 </div>
             
@@ -676,7 +676,7 @@
                         <i class="fas fa-user me-2"></i>Try On a Shirt
                     </div>
                     <div class="card-body">
-                        <form id="uploadForm" method="POST" enctype="multipart/form-data">
+                        <form id="uploadForm" method="POST" action="/upload" enctype="multipart/form-data">
                             <div class="mb-4">
                                 <label for="user_image" class="form-label">Upload Your Photo</label>
                                 <input type="file" class="form-control" name="user_image" id="user_image" accept="image/*" required>
