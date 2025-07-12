@@ -298,24 +298,63 @@ def process_image(user_image_path, shirt_index):
         left_hip = np.array(lmList[23][1:3])
         right_hip = np.array(lmList[24][1:3])
 
-        # Calculate center
-        center_x = np.mean([left_shoulder[0], right_shoulder[0], left_hip[0], right_hip[0]])
-        center_y = np.mean([left_shoulder[1], right_shoulder[1], left_hip[1], right_hip[1]])
-        scale = 1.5
+        img_height, img_width = img.shape[:2]
 
-        # Calculate dimensions
-        shoulder_width = abs(left_shoulder[0] - right_shoulder[0]) * scale
-        hip_height = abs(left_hip[1] - left_shoulder[1]) * scale
+        # # Calculate center
+        # center_x = np.mean([left_shoulder[0], right_shoulder[0], left_hip[0], right_hip[0]])
+        # center_y = np.mean([left_shoulder[1], right_shoulder[1], left_hip[1], right_hip[1]])
+        # scale = 1.5
 
-        # Define points
-        left_shoulder = [center_x - shoulder_width / 2, center_y - hip_height / 2]
-        right_shoulder = [center_x + shoulder_width / 2, center_y - hip_height / 2]
-        left_hip = [center_x - shoulder_width / 2, center_y + hip_height / 2]
-        right_hip = [center_x + shoulder_width / 2, center_y + hip_height / 2]
+        # # Calculate dimensions
+        # shoulder_width = abs(left_shoulder[0] - right_shoulder[0]) * scale
+        # hip_height = abs(left_hip[1] - left_shoulder[1]) * scale
 
-        app.logger.info(f"Overlay points: {left_shoulder}, {right_shoulder}, {left_hip}, {right_hip}")
+        # # Define points
+        # left_shoulder = [center_x - shoulder_width / 2, center_y - hip_height / 2]
+        # right_shoulder = [center_x + shoulder_width / 2, center_y - hip_height / 2]
+        # left_hip = [center_x - shoulder_width / 2, center_y + hip_height / 2]
+        # right_hip = [center_x + shoulder_width / 2, center_y + hip_height / 2]
 
-        # Perspective transformation
+        # app.logger.info(f"Overlay points: {left_shoulder}, {right_shoulder}, {left_hip}, {right_hip}")
+
+        # Calculate the top and bottom bounds of the torso
+        top_y = int(min(left_shoulder[1], right_shoulder[1]))
+        bottom_y = int(max(left_hip[1], right_hip[1]))
+        torso_height = bottom_y - top_y
+        torso_width = int(np.linalg.norm(left_shoulder - right_shoulder))
+
+        # Add padding to width/height
+        pad_width = int(torso_width * 0.5)
+        pad_height = int(torso_height * 0.2)
+
+        # Define four destination points (bounding box with padding)
+        x1 = max(0, int(left_shoulder[0]) - pad_width)
+        y1 = max(0, top_y - pad_height)
+        x2 = min(img_width - 1, int(right_shoulder[0]) + pad_width)
+        y2 = min(img_height - 1, bottom_y + pad_height)
+
+        # # Perspective transformation
+        # src_pts = np.float32([
+        #     [0, 0],
+        #     [imgShirt.shape[1], 0],
+        #     [imgShirt.shape[1], imgShirt.shape[0]],
+        #     [0, imgShirt.shape[0]]
+        # ])
+
+        # dst_pts = np.float32([
+        #     [left_shoulder[0], left_shoulder[1] + 30],
+        #     [right_shoulder[0], right_shoulder[1] + 30],
+        #     [right_hip[0], right_hip[1]],
+        #     [left_hip[0], left_hip[1]]
+        # ])
+
+        dst_pts = np.float32([
+            [x1, y1],
+            [x2, y1],
+            [x2, y2],
+            [x1, y2]
+        ])
+
         src_pts = np.float32([
             [0, 0],
             [imgShirt.shape[1], 0],
@@ -323,12 +362,16 @@ def process_image(user_image_path, shirt_index):
             [0, imgShirt.shape[0]]
         ])
 
-        dst_pts = np.float32([
-            [left_shoulder[0], left_shoulder[1] + 30],
-            [right_shoulder[0], right_shoulder[1] + 30],
-            [right_hip[0], right_hip[1]],
-            [left_hip[0], left_hip[1]]
-        ])
+        app.logger.info(f"Overlay points: {dst_pts.tolist()}")
+
+        # Visualize placement points (optional)
+        for pt in dst_pts:
+            cv2.circle(img, (int(pt[0]), int(pt[1])), 10, (0, 255, 0), -1)
+        cv2.imwrite("debug_pose_overlay_points.jpg", img)
+        
+        # matrix = cv2.getPerspectiveTransform(src_pts, dst_pts)
+        # warped = cv2.warpPerspective(imgShirt, matrix, (img.shape[1], img.shape[0]),
+        #                              borderValue=(0, 0, 0, 0))
 
         matrix = cv2.getPerspectiveTransform(src_pts, dst_pts)
         warped = cv2.warpPerspective(imgShirt, matrix, (img.shape[1], img.shape[0]),
