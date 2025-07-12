@@ -90,7 +90,7 @@ def delete_shirt(filename):
 
 
 
-def overlay_transparent(background, overlay, alpha_blend=0.7):
+def overlay_transparent(background, overlay, alpha_blend=1.0):
     try:
         if overlay.shape[2] == 4:
             b, g, r, a = cv2.split(overlay)
@@ -98,9 +98,9 @@ def overlay_transparent(background, overlay, alpha_blend=0.7):
             b, g, r = cv2.split(overlay)
             a = np.ones_like(b) * 255
 
-        # Improved green screen 
-        green_mask = (g > 150) & (r < 100) & (b < 100)
-        a[green_mask] = 0
+        # # Improved green screen 
+        # green_mask = (g > 150) & (r < 100) & (b < 100)
+        # a[green_mask] = 0
 
 
         alpha = (a / 255.0) * alpha_blend
