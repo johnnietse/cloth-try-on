@@ -7,3 +7,4 @@ static/processed/*
 static/Resources/*
 uploads/*
 run.py
+.env

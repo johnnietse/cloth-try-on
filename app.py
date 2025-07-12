@@ -2,8 +2,12 @@ import os
 import cv2
 import cvzone
 import numpy as np
+import requests
+import base64
+import json
+import uuid
 from datetime import datetime
-from flask import Flask, request, render_template, send_from_directory, jsonify, redirect, url_for, abort
+from flask import Flask, request, render_template, send_from_directory, jsonify, redirect, url_for, abort, session
 from cvzone.PoseModule import PoseDetector
 import logging
 from logging.handlers import RotatingFileHandler
@@ -19,6 +23,8 @@ if not hasattr(cv2.dnn, 'DictValue'):
     cv2.dnn.DictValue = type('DictValue', (), {})
 
 app = Flask(__name__)
+
+# app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'default_secret_key')
 
 # Configure paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -43,6 +49,11 @@ if not app.debug:
     app.logger.addHandler(handler)
     app.logger.setLevel(logging.INFO)
 
+# API Keys (Set these in your environment variables)
+COHERE_API_KEY = os.environ.get('COHERE_API_KEY')
+INSTAGRAM_APP_ID = os.environ.get('INSTAGRAM_APP_ID')
+INSTAGRAM_APP_SECRET = os.environ.get('INSTAGRAM_APP_SECRET')
+INSTAGRAM_REDIRECT_URI = os.environ.get('INSTAGRAM_REDIRECT_URI', 'http://localhost:5000/instagram_callback')
 
 def get_shirt_list():
     try:
@@ -233,6 +244,147 @@ def upload_image():
     except Exception as e:
         app.logger.error(f"upload_image failed: {e}")
         return jsonify({"error": str(e)}), 500
+
+
+# New routes for Cohere, DALLE-3 and Instagram
+@app.route('/cohere_chat', methods=['POST'])
+def cohere_chat():
+    try:
+        data = request.json
+        user_message = data.get('message')
+        conversation = data.get('conversation', [])
+
+        headers = {
+            'Authorization': f'Bearer {COHERE_API_KEY}',
+            'Content-Type': 'application/json'
+        }
+
+        payload = {
+            "model": "command",
+            "message": user_message,
+            "chat_history": conversation,
+            "prompt_truncation": "AUTO",
+            "temperature": 0.3
+        }
+
+        response = requests.post(
+            'https://api.cohere.ai/v1/chat',
+            headers=headers,
+            json=payload
+        )
+
+        if response.status_code != 200:
+            app.logger.error(f"Cohere API error: {response.text}")
+            return jsonify({"error": "Failed to get response from Cohere"}), 500
+
+        cohere_data = response.json()
+        return jsonify({
+            "text": cohere_data.get('text', ''),
+            "conversation_id": cohere_data.get('conversation_id', '')
+        })
+    except Exception as e:
+        app.logger.error(f"cohere_chat failed: {e}")
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@app.route('/instagram_auth')
+def instagram_auth():
+    # Start Instagram OAuth flow
+    auth_url = (
+        f"https://api.instagram.com/oauth/authorize?"
+        f"client_id={INSTAGRAM_APP_ID}&"
+        f"redirect_uri={INSTAGRAM_REDIRECT_URI}&"
+        "scope=user_profile,user_media&"
+        "response_type=code"
+    )
+    return redirect(auth_url)
+
+
+@app.route('/instagram_callback')
+def instagram_callback():
+    code = request.args.get('code')
+    if not code:
+        return jsonify({"error": "Authorization failed"}), 400
+
+    # Exchange code for access token
+    token_data = {
+        'client_id': INSTAGRAM_APP_ID,
+        'client_secret': INSTAGRAM_APP_SECRET,
+        'grant_type': 'authorization_code',
+        'redirect_uri': INSTAGRAM_REDIRECT_URI,
+        'code': code
+    }
+
+    response = requests.post(
+        'https://api.instagram.com/oauth/access_token',
+        data=token_data
+    )
+
+    if response.status_code != 200:
+        app.logger.error(f"Instagram token exchange failed: {response.text}")
+        return jsonify({"error": "Failed to get access token"}), 500
+
+    token_info = response.json()
+    access_token = token_info.get('access_token')
+    user_id = token_info.get('user_id')
+
+    # Store token in session
+    session['instagram_token'] = access_token
+    session['instagram_user_id'] = user_id
+
+    return redirect(url_for('index'))
+
+
+@app.route('/post_to_instagram', methods=['POST'])
+def post_to_instagram():
+    try:
+        data = request.json
+        image_url = data.get('image_url')
+
+        # Check if user is authenticated
+        access_token = session.get('instagram_token')
+        user_id = session.get('instagram_user_id')
+
+        if not access_token or not user_id:
+            return jsonify({"error": "Not authenticated with Instagram"}), 401
+
+        # Get absolute path to image
+        if not image_url.startswith('/static/processed/'):
+            return jsonify({"error": "Invalid image path"}), 400
+
+        image_path = os.path.join(BASE_DIR, image_url[1:])
+
+        # Step 1: Create media container
+        container_url = f"https://graph.facebook.com/v18.0/{user_id}/media"
+        container_params = {
+            'image_url': request.host_url + image_url.lstrip('/'),
+            'caption': 'Created with Virtual Try-On #VirtualTryOn #FashionTech',
+            'access_token': access_token
+        }
+
+        container_resp = requests.post(container_url, params=container_params)
+        if container_resp.status_code != 200:
+            app.logger.error(f"Instagram container error: {container_resp.text}")
+            return jsonify({"error": "Failed to create media container"}), 500
+
+        container_id = container_resp.json().get('id')
+
+        # Step 2: Publish the container
+        publish_url = f"https://graph.facebook.com/v18.0/{user_id}/media_publish"
+        publish_params = {
+            'creation_id': container_id,
+            'access_token': access_token
+        }
+
+        publish_resp = requests.post(publish_url, params=publish_params)
+        if publish_resp.status_code != 200:
+            app.logger.error(f"Instagram publish error: {publish_resp.text}")
+            return jsonify({"error": "Failed to publish media"}), 500
+
+        return jsonify({"success": True, "post_id": publish_resp.json().get('id')})
+    except Exception as e:
+        app.logger.error(f"post_to_instagram failed: {e}")
+        return jsonify({"error": "Internal server error"}), 500
 
 
 @app.route('/healthz')

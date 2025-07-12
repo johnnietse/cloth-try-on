@@ -578,6 +578,28 @@
             background: var(--light-card);
         }
 
+
+        .btn-instagram {
+            background: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
+            color: white;
+            border: none;
+        }
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .user-message {
+            background: rgba(124, 77, 255, 0.15);
+            text-align: right;
+        }
+        .bot-message {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+
+
+
     </style>
 </head>
 <body class="dark">
@@ -709,8 +731,49 @@
                         </form>
                     </div>
                 </div>
+
+
+
             </div>
         </div>
+
+
+
+
+
+
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-comments me-2"></i>Style Assistant
+                    </div>
+                    <div class="card-body">
+                        <div id="chatContainer" style="height: 300px; overflow-y: auto; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 15px; background: rgba(255,255,255,0.05);">
+                            <div class="chat-message bot-message">
+                                <strong>Style Assistant:</strong> Hi! I'm your personal style assistant. Ask me what you should wear today!
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <input type="text" id="chatInput" class="form-control" placeholder="Ask me what to wear...">
+                            <button class="btn btn-primary" id="sendChatBtn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+
+
 
         <!-- Processing Message -->
         <div id="processingMessage" class="processing-message">
@@ -726,9 +789,13 @@
             <h3><i class="fas fa-check-circle me-2 text-success"></i>Your Virtual Try-On Result</h3>
             <img id="resultImage" class="result-image" alt="Virtual try-on result">
             <div class="mt-4">
-                <a id="downloadLink" class="btn btn-success btn-lg">
+                <a id="downloadLink" class="btn btn-success btn-lg me-2">
                     <i class="fas fa-download me-2"></i> Download Image
                 </a>
+                <!-- Add Instagram button here -->
+                <button id="postResultToInstagramBtn" class="btn btn-instagram btn-lg">
+                    <i class="fab fa-instagram me-2"></i> Post to Instagram
+                </button>
             </div>
         </div>
     </div>
@@ -783,6 +850,156 @@
         const themeSwitcher = document.getElementById('themeSwitcher');
         const body = document.body;
         const steps = document.querySelectorAll('.step');
+
+
+        // Chat functionality
+        const chatContainer = document.getElementById('chatContainer');
+        const chatInput = document.getElementById('chatInput');
+        const sendChatBtn = document.getElementById('sendChatBtn');
+
+        // Add new Instagram button for results
+        const postResultToInstagramBtn = document.getElementById('postResultToInstagramBtn');
+
+        let conversationHistory = [];
+
+
+        function addMessageToChat(message, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('chat-message', isUser ? 'user-message' : 'bot-message');
+            messageDiv.innerHTML = `<strong>${isUser ? 'You' : 'Style Assistant'}:</strong> ${message}`;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        async function sendMessageToCohere(message) {
+            try {
+                const response = await fetch('/cohere_chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        conversation: conversationHistory
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Add bot response to chat
+                addMessageToChat(data.text);
+
+
+
+                return data.text;
+            } catch (error) {
+                console.error('Cohere chat error:', error);
+                addMessageToChat("Sorry, I'm having trouble connecting to the style assistant. Please try again later.");
+            }
+        }
+
+        async function generateOutfitImage(description) {
+            try {
+                const response = await fetch('/generate_outfit_image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        description: description
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Show the generated image
+                generatedOutfitImage.src = data.image_url;
+                generatedImageContainer.style.display = 'block';
+
+                // Set download link
+                downloadGeneratedBtn.onclick = () => {
+                    const link = document.createElement('a');
+                    link.href = data.image_url;
+                    link.download = `outfit-${Date.now().jpg}`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+
+                return data.image_url;
+            } catch (error) {
+                console.error('Image generation error:', error);
+                addMessageToChat("Sorry, I couldn't generate an image of that outfit. Please try again.");
+            }
+        }
+
+        // Event listeners
+        sendChatBtn.addEventListener('click', async () => {
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            // Add user message to chat
+            addMessageToChat(message, true);
+            conversationHistory.push({ role: 'user', message: message });
+
+            // Clear input
+            chatInput.value = '';
+
+            // Send to Cohere
+            const botResponse = await sendMessageToCohere(message);
+
+
+        });
+
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendChatBtn.click();
+            }
+        });
+
+        // Instagram posting
+        postToInstagramBtn.addEventListener('click', async () => {
+            if (!resultImage.src) return;
+
+            try {
+                const response = await fetch('/post_to_instagram', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        image_url: resultImage.src
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    if (data.error.includes("Not authenticated")) {
+                        // Start Instagram auth flow
+                        window.location.href = '/instagram_auth';
+                    } else {
+                        alert(`Error: ${data.error}`);
+                    }
+                } else {
+                    alert('Successfully posted to Instagram!');
+                }
+            } catch (error) {
+                console.error('Instagram posting error:', error);
+                alert('Failed to post to Instagram. Please try again.');
+            }
+        });
+
+
+
 
         // Handle shirt selection
         shirtItems.forEach((item, index) => {
