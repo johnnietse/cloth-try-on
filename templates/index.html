@@ -597,6 +597,45 @@
             background: rgba(255, 255, 255, 0.08);
         }
 
+        
+        /* Add this to fix image preview */
+        .image-preview-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+        }
+        
+        body.light .image-preview-container {
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px dashed rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Fix radio button selection */
+        .shirt-item.selected {
+            border: 3px solid var(--primary) !important;
+            box-shadow: 0 0 10px rgba(124, 77, 255, 0.5);
+        }
+        
+        /* Fix form input in light mode */
+        body.light .form-control {
+            background-color: #fff;
+            color: #333;
+        }
+        
+        /* Improve processing modal */
+        .modal-content {
+            background: var(--dark-card);
+            color: var(--text-light);
+        }
+        
+        body.light .modal-content {
+            background: var(--light-card);
+            color: var(--text-dark);
+        }
 
 
 
