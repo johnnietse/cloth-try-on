@@ -148,8 +148,13 @@ def process_image(user_image_path, shirt_index):
     if img is None:
         raise ValueError("Failed to load user image")
 
+    app.logger.info(f"User image loaded: {user_image_path}")
+
+
     img = detector.findPose(img)
     lmList, bboxInfo = detector.findPosition(img, bboxWithHands=False, draw=False)
+
+    app.logger.info(f"Pose landmarks: {lmList}")
 
     shirts = get_shirt_list()
     if not shirts:
@@ -161,11 +166,14 @@ def process_image(user_image_path, shirt_index):
         if imgShirt is None:
             raise ValueError(f"Failed to load shirt image: {shirt_path}")
 
-        # Extract keypoints
-        left_shoulder = np.array(lmList[11][1:3])
-        right_shoulder = np.array(lmList[12][1:3])
-        left_hip = np.array(lmList[23][1:3])
-        right_hip = np.array(lmList[24][1:3])
+        app.logger.info(f"Shirt loaded: {shirt_path}")
+        cv2.imwrite("debug_shirt_raw.png", imgShirt)
+
+        # # Extract keypoints
+        # left_shoulder = np.array(lmList[11][1:3])
+        # right_shoulder = np.array(lmList[12][1:3])
+        # left_hip = np.array(lmList[23][1:3])
+        # right_hip = np.array(lmList[24][1:3])
 
 
         # # Calculate torso dimensions with better scaling
@@ -305,6 +313,8 @@ def process_image(user_image_path, shirt_index):
         left_hip = [center_x - shoulder_width / 2, center_y + hip_height / 2]
         right_hip = [center_x + shoulder_width / 2, center_y + hip_height / 2]
 
+        app.logger.info(f"Overlay points: {left_shoulder}, {right_shoulder}, {left_hip}, {right_hip}")
+
         # Perspective transformation
         src_pts = np.float32([
             [0, 0],
@@ -326,11 +336,12 @@ def process_image(user_image_path, shirt_index):
 
 
         
+        cv2.imwrite("debug_warped.png", warped)
 
         
         # Overlay shirt on image
         # result = overlay_transparent(img, warped)
-        result = overlay_transparent(img, warped)
+        result = overlay_transparent(img, warped, alpha_blend=1.0)
 
         # Save processed image
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
