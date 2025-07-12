@@ -90,7 +90,7 @@ def delete_shirt(filename):
 
 
 
-def overlay_transparent(background, overlay, alpha_blend=1.0):
+def overlay_transparent(background, overlay, alpha_blend=0.7):
     try:
         if overlay.shape[2] == 4:
             b, g, r, a = cv2.split(overlay)
@@ -342,6 +342,9 @@ def process_image(user_image_path, shirt_index):
         # Overlay shirt on image
         # result = overlay_transparent(img, warped)
         result = overlay_transparent(img, warped, alpha_blend=1.0)
+
+        cv2.imwrite("debug_overlay_result.png", result)
+
 
         # Save processed image
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
