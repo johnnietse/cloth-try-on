@@ -9,3 +9,9 @@ protobuf
 sounddevice
 matplotlib
 scipy
+absl-py 
+attrs 
+flatbuffers 
+opencv-python  
+opencv-python-headless
+ 
