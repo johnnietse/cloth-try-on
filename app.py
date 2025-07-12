@@ -1,19 +1,16 @@
-from werkzeug.utils import secure_filename
 import os
 import cv2
 import cvzone
 import numpy as np
 import requests
-import base64
-import json
 import uuid
 from datetime import datetime
-from flask import Flask, request, render_template, send_from_directory, jsonify, redirect, url_for, abort, session
+from flask import Flask, request, render_template, jsonify, redirect, url_for, session
 from cvzone.PoseModule import PoseDetector
 import logging
 from logging.handlers import RotatingFileHandler
 import shutil
-
+from werkzeug.utils import secure_filename
 
 # OpenCV compatibility workaround
 np.int = int
@@ -24,8 +21,7 @@ if not hasattr(cv2.dnn, 'DictValue'):
     cv2.dnn.DictValue = type('DictValue', (), {})
 
 app = Flask(__name__)
-
-# app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'default_secret_key')
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'default_secret_key')
 
 # Configure paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -50,7 +46,7 @@ if not app.debug:
     app.logger.addHandler(handler)
     app.logger.setLevel(logging.INFO)
 
-# API Keys (Set these in your environment variables)
+# API Keys
 COHERE_API_KEY = os.environ.get('COHERE_API_KEY')
 INSTAGRAM_APP_ID = os.environ.get('INSTAGRAM_APP_ID')
 INSTAGRAM_APP_SECRET = os.environ.get('INSTAGRAM_APP_SECRET')
@@ -58,10 +54,8 @@ INSTAGRAM_REDIRECT_URI = os.environ.get('INSTAGRAM_REDIRECT_URI', 'http://localh
 
 def get_shirt_list():
     try:
-        shirts = []
-        for f in os.listdir(app.config['SHIRT_FOLDER']):
-            if f.lower().endswith(('.png', '.jpg', '.jpeg')):
-                shirts.append(f)
+        shirts = [f for f in os.listdir(app.config['SHIRT_FOLDER'])
+                 if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
         # Sort by modification time (newest first)
         shirts.sort(key=lambda x: os.path.getmtime(os.path.join(app.config['SHIRT_FOLDER'], x)), reverse=True)
         return shirts
@@ -69,23 +63,18 @@ def get_shirt_list():
         app.logger.error(f"get_shirt_list failed: {e}")
         return []
 
-
 @app.route('/delete_shirt/<filename>', methods=['DELETE'])
 def delete_shirt(filename):
     try:
-        # Secure the filename
         if '..' in filename or filename.startswith('/'):
             return jsonify({"error": "Invalid filename"}), 400
         
         shirt_path = os.path.join(app.config['SHIRT_FOLDER'], filename)
-        
-        # Create backup before deleting
         backup_dir = os.path.join(BASE_DIR, 'static', 'deleted_shirts')
         os.makedirs(backup_dir, exist_ok=True)
         backup_path = os.path.join(backup_dir, f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}")
         
         if os.path.exists(shirt_path):
-            # Move to backup instead of permanent delete
             shutil.move(shirt_path, backup_path)
             return jsonify({"success": True})
         else:
@@ -93,8 +82,6 @@ def delete_shirt(filename):
     except Exception as e:
         app.logger.error(f"delete_shirt failed: {e}")
         return jsonify({"error": "Internal server error"}), 500
-
-
 
 def overlay_transparent(background, overlay, alpha_blend=0.7):
     try:
@@ -117,7 +104,6 @@ def overlay_transparent(background, overlay, alpha_blend=0.7):
         app.logger.error(f"overlay_transparent failed: {e}")
         return background
 
-
 def process_image(user_image_path, shirt_index):
     detector = PoseDetector()
     img = cv2.imread(user_image_path)
@@ -131,12 +117,17 @@ def process_image(user_image_path, shirt_index):
     if not shirts:
         raise ValueError("No shirt images found")
 
-    if lmList and len(lmList) > 24:
+    try:
         shirt_path = os.path.join(app.config['SHIRT_FOLDER'], shirts[shirt_index])
-        imgShirt = cv2.imread(shirt_path, cv2.IMREAD_UNCHANGED)
-        if imgShirt is None:
-            raise ValueError(f"Failed to load shirt image: {shirt_path}")
+    except IndexError:
+        shirt_index = 0
+        shirt_path = os.path.join(app.config['SHIRT_FOLDER'], shirts[0])
+    
+    imgShirt = cv2.imread(shirt_path, cv2.IMREAD_UNCHANGED)
+    if imgShirt is None:
+        raise ValueError(f"Failed to load shirt image: {shirt_path}")
 
+    if lmList and len(lmList) > 24:
         # Extract keypoints
         left_shoulder = np.array(lmList[11][1:3])
         right_shoulder = np.array(lmList[12][1:3])
@@ -190,12 +181,10 @@ def process_image(user_image_path, shirt_index):
     else:
         raise ValueError("Pose detection failed - could not find body landmarks")
 
-
 @app.route('/')
 def index():
     shirts = get_shirt_list()
     return render_template('index.html', shirts=shirts)
-
 
 @app.route('/upload_shirt', methods=['POST'])
 def upload_shirt():
@@ -207,18 +196,17 @@ def upload_shirt():
         if not file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
             return jsonify({"error": "Invalid file type"}), 400
 
-        filename = os.path.join(app.config['SHIRT_FOLDER'], file.filename)
-        file.save(filename)
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['SHIRT_FOLDER'], filename)
+        file.save(filepath)
         return redirect(url_for('index'))
     except Exception as e:
         app.logger.error(f"upload_shirt failed: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-
 @app.route('/upload', methods=['POST'])
 def upload_image():
     try:
-        # Get user image
         user_image = request.files.get('user_image')
         if not user_image or user_image.filename == '':
             return jsonify({"error": "No user image uploaded"}), 400
@@ -226,13 +214,13 @@ def upload_image():
         # Save user image
         filename = secure_filename(user_image.filename)
         unique_filename = f"user_{uuid.uuid4().hex}_{filename}"
-        user_path = os.path.join(app.config['UPLOAD_FOLDER'], user_filename)
+        user_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
         user_image.save(user_path)
 
         # Get shirt index
         shirt_index = int(request.form.get('shirt_index', 0))
-        shirt_list = get_shirt_list()
-
+        shirts = get_shirt_list()
+        
         if not shirts:
             return jsonify({"error": "No shirts available"}), 400
             
@@ -245,18 +233,18 @@ def upload_image():
 
         return jsonify({
             "success": True,
-            "message": "Image processed successfully!",
             "processed_url": processed_url
         })
     except Exception as e:
         app.logger.error(f"upload_image failed: {e}")
         return jsonify({"error": str(e)}), 500
 
-
-# New routes for Cohere, DALLE-3 and Instagram
 @app.route('/cohere_chat', methods=['POST'])
 def cohere_chat():
     try:
+        if not COHERE_API_KEY:
+            return jsonify({"error": "Cohere API key not configured"}), 500
+            
         data = request.json
         user_message = data.get('message')
         conversation = data.get('conversation', [])
@@ -281,7 +269,7 @@ def cohere_chat():
         )
 
         if response.status_code != 200:
-            app.logger.error(f"Cohere API error: {response.text}")
+            app.logger.error(f"Cohere API error: {response.status_code} - {response.text}")
             return jsonify({"error": "Failed to get response from Cohere"}), 500
 
         cohere_data = response.json()
@@ -293,10 +281,11 @@ def cohere_chat():
         app.logger.error(f"cohere_chat failed: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-
 @app.route('/instagram_auth')
 def instagram_auth():
-    # Start Instagram OAuth flow
+    if not INSTAGRAM_APP_ID:
+        return "Instagram integration not configured", 400
+        
     auth_url = (
         f"https://api.instagram.com/oauth/authorize?"
         f"client_id={INSTAGRAM_APP_ID}&"
@@ -306,14 +295,12 @@ def instagram_auth():
     )
     return redirect(auth_url)
 
-
 @app.route('/instagram_callback')
 def instagram_callback():
     code = request.args.get('code')
     if not code:
         return jsonify({"error": "Authorization failed"}), 400
 
-    # Exchange code for access token
     token_data = {
         'client_id': INSTAGRAM_APP_ID,
         'client_secret': INSTAGRAM_APP_SECRET,
@@ -328,50 +315,44 @@ def instagram_callback():
     )
 
     if response.status_code != 200:
-        app.logger.error(f"Instagram token exchange failed: {response.text}")
+        app.logger.error(f"Instagram token exchange failed: {response.status_code} - {response.text}")
         return jsonify({"error": "Failed to get access token"}), 500
 
     token_info = response.json()
     access_token = token_info.get('access_token')
     user_id = token_info.get('user_id')
 
-    # Store token in session
     session['instagram_token'] = access_token
     session['instagram_user_id'] = user_id
 
     return redirect(url_for('index'))
 
-
 @app.route('/post_to_instagram', methods=['POST'])
 def post_to_instagram():
     try:
+        if not INSTAGRAM_APP_ID:
+            return jsonify({"error": "Instagram integration not configured"}), 400
+            
         data = request.json
         image_url = data.get('image_url')
 
-        # Check if user is authenticated
         access_token = session.get('instagram_token')
         user_id = session.get('instagram_user_id')
 
         if not access_token or not user_id:
             return jsonify({"error": "Not authenticated with Instagram"}), 401
 
-        # Get absolute path to image
-        if not image_url.startswith('/static/processed/'):
-            return jsonify({"error": "Invalid image path"}), 400
-
-        image_path = os.path.join(BASE_DIR, image_url[1:])
-
         # Step 1: Create media container
         container_url = f"https://graph.facebook.com/v18.0/{user_id}/media"
         container_params = {
-            'image_url': request.host_url + image_url.lstrip('/'),
+            'image_url': request.host_url.strip('/') + image_url,
             'caption': 'Created with Virtual Try-On #VirtualTryOn #FashionTech',
             'access_token': access_token
         }
 
         container_resp = requests.post(container_url, params=container_params)
         if container_resp.status_code != 200:
-            app.logger.error(f"Instagram container error: {container_resp.text}")
+            app.logger.error(f"Instagram container error: {container_resp.status_code} - {container_resp.text}")
             return jsonify({"error": "Failed to create media container"}), 500
 
         container_id = container_resp.json().get('id')
@@ -385,7 +366,7 @@ def post_to_instagram():
 
         publish_resp = requests.post(publish_url, params=publish_params)
         if publish_resp.status_code != 200:
-            app.logger.error(f"Instagram publish error: {publish_resp.text}")
+            app.logger.error(f"Instagram publish error: {publish_resp.status_code} - {publish_resp.text}")
             return jsonify({"error": "Failed to publish media"}), 500
 
         return jsonify({"success": True, "post_id": publish_resp.json().get('id')})
@@ -393,11 +374,9 @@ def post_to_instagram():
         app.logger.error(f"post_to_instagram failed: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-
 @app.route('/healthz')
 def health_check():
     return jsonify({"status": "healthy"}), 200
-
 
 if __name__ == '__main__':
     debug = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
