@@ -1,3 +1,4 @@
+from werkzeug.utils import secure_filename
 import os
 import cv2
 import cvzone
@@ -57,8 +58,13 @@ INSTAGRAM_REDIRECT_URI = os.environ.get('INSTAGRAM_REDIRECT_URI', 'http://localh
 
 def get_shirt_list():
     try:
-        return [f for f in os.listdir(app.config['SHIRT_FOLDER'])
-                if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        shirts = []
+        for f in os.listdir(app.config['SHIRT_FOLDER']):
+            if f.lower().endswith(('.png', '.jpg', '.jpeg')):
+                shirts.append(f)
+        # Sort by modification time (newest first)
+        shirts.sort(key=lambda x: os.path.getmtime(os.path.join(app.config['SHIRT_FOLDER'], x)), reverse=True)
+        return shirts
     except Exception as e:
         app.logger.error(f"get_shirt_list failed: {e}")
         return []
@@ -217,19 +223,20 @@ def upload_image():
         if not user_image or user_image.filename == '':
             return jsonify({"error": "No user image uploaded"}), 400
 
-        if not user_image.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
-            return jsonify({"error": "Invalid file type"}), 400
-
         # Save user image
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        user_filename = f"user_{timestamp}_{user_image.filename}"
+        filename = secure_filename(user_image.filename)
+        unique_filename = f"user_{uuid.uuid4().hex}_{filename}"
         user_path = os.path.join(app.config['UPLOAD_FOLDER'], user_filename)
         user_image.save(user_path)
 
         # Get shirt index
         shirt_index = int(request.form.get('shirt_index', 0))
         shirt_list = get_shirt_list()
-        if not 0 <= shirt_index < len(shirt_list):
+
+        if not shirts:
+            return jsonify({"error": "No shirts available"}), 400
+            
+        if shirt_index < 0 or shirt_index >= len(shirts):
             shirt_index = 0
 
         # Process image
