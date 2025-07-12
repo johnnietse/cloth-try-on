@@ -7,14 +7,13 @@
     
     <meta name="apple-mobile-web-app-title" content="Virtual Try-On" />
     <link rel="icon" type="image/png" href="/static/my-favicon/favicon-96x96.png" sizes="96x96" />
-    <link rel="icon" type="image/png" href="/my-favicon/favicon-32x32.png" sizes="32x32" />
-    <link rel="icon" type="image/png" href="/my-favicon/favicon-16x16.png" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/static/my-favicon/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/static/my-favicon/favicon-16x16.png" sizes="16x16" />
     <link rel="icon" type="image/svg+xml" href="/static/my-favicon/favicon.svg" />
     <link rel="shortcut icon" href="/static/my-favicon/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/static/my-favicon/apple-touch-icon.png" />
     <link rel="manifest" href="/static/my-favicon/site.webmanifest" />
 
-    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -185,7 +184,6 @@
         .form-control[type="file"] {
             height: auto;
         }
-
         
         .form-control:focus {
             background: rgba(255, 255, 255, 0.12);
@@ -310,26 +308,6 @@
         
         body.light .placeholder-text {
             color: rgba(0, 0, 0, 0.3);
-        }
-        
-        .processing-message {
-            text-align: center;
-            padding: 40px 20px;
-            border-radius: 16px;
-            background: rgba(30, 30, 46, 0.7);
-            backdrop-filter: blur(10px);
-            margin: 30px 0;
-            display: none;
-        }
-        
-        body.light .processing-message {
-            background: rgba(255, 255, 255, 0.7);
-        }
-        
-        .spinner-border {
-            width: 3rem;
-            height: 3rem;
-            color: var(--primary);
         }
         
         .result-container {
@@ -488,12 +466,11 @@
             }
         }
 
-        /* NEW: Light color labels in dark mode */
+        /* Light color labels in dark mode */
         body:not(.light) .form-label {
             color: var(--text-light);
         }
 
-        /* Fix for card headers and small descriptions in dark mode */
         body:not(.light) .card-header {
             color: var(--text-light);
         }
@@ -502,20 +479,17 @@
             color: var(--text-light);
         }
 
-
         body:not(.light) .card-header i {
             color: var(--text-light);
         }
 
-        /* Fix "Select a Shirt" heading and icon in dark mode */
         body:not(.light) h4 {
             color: var(--text-light);
         }
         
         body:not(.light) h4 i {
-            color: var(--text-light); /* Or use var(--primary) for a pop of color */
+            color: var(--text-light);
         }
-
 
         body:not(.light) i {
             color: var(--text-light);
@@ -527,8 +501,8 @@
 
         /* File upload button styles */
         input[type="file"]::file-selector-button {
-            background-color: black;         /* Dark background in dark mode */
-            color: white;                    /* White text */
+            background-color: black;
+            color: white;
             border: none;
             padding: 8px 16px;
             margin-right: 16px;
@@ -578,28 +552,65 @@
             background: var(--light-card);
         }
 
-
         .btn-instagram {
             background: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
             color: white;
             border: none;
         }
+        
         .chat-message {
             margin-bottom: 10px;
             padding: 10px;
             border-radius: 8px;
         }
+        
         .user-message {
             background: rgba(124, 77, 255, 0.15);
             text-align: right;
         }
+        
         .bot-message {
             background: rgba(255, 255, 255, 0.08);
         }
-
-
-
-
+        
+        /* Fix image preview */
+        .image-preview-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+        }
+        
+        body.light .image-preview-container {
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px dashed rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Fix radio button selection */
+        .shirt-item.selected {
+            border: 3px solid var(--primary) !important;
+            box-shadow: 0 0 10px rgba(124, 77, 255, 0.5);
+        }
+        
+        /* Fix form input in light mode */
+        body.light .form-control {
+            background-color: #fff;
+            color: #333;
+        }
+        
+        /* Modal styling */
+        .modal-content {
+            background: var(--dark-card);
+            color: var(--text-light);
+        }
+        
+        body.light .modal-content {
+            background: var(--light-card);
+            color: var(--text-dark);
+        }
     </style>
 </head>
 <body class="dark">
@@ -607,25 +618,11 @@
     <nav class="navbar navbar-expand-lg">
         <div class="container d-flex justify-content-between align-items-center">
             <a class="navbar-brand" href="#"><i class="fas fa-tshirt"></i> Virtual Try-On</a>
-                <div class="d-flex align-items-center">
-                  <button id="themeSwitcher" class="btn ms-2">
-                    <i class="fas fa-moon"></i>
-                  </button>
-                </div>
-            
-            
-            
-<!--             <div class="collapse navbar-collapse" id="navbarNav">
-                
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item">
-                        <button id="themeSwitcher" class="btn">
-                            <i class="fas fa-moon"></i>
-                        </button>
-                    </li>
-                </ul>
-            </div> -->
-            
+            <div class="d-flex align-items-center">
+                <button id="themeSwitcher" class="btn ms-2">
+                    <i class="fas fa-sun"></i>
+                </button>
+            </div>
         </div>
     </nav>
 
@@ -648,6 +645,7 @@
     <!-- Main Content -->
     <div class="container">
         <div class="row">
+            <!-- Upload Shirt Card -->
             <div class="col-lg-6">
                 <div class="card">
                     <div class="card-header">
@@ -670,13 +668,14 @@
                 </div>
             </div>
             
+            <!-- Try On Shirt Card -->
             <div class="col-lg-6">
                 <div class="card">
                     <div class="card-header">
                         <i class="fas fa-user me-2"></i>Try On a Shirt
                     </div>
                     <div class="card-body">
-                        <form id="uploadForm" method="POST" enctype="multipart/form-data">
+                        <form id="uploadForm" method="POST" action="/upload" enctype="multipart/form-data">
                             <div class="mb-4">
                                 <label for="user_image" class="form-label">Upload Your Photo</label>
                                 <input type="file" class="form-control" name="user_image" id="user_image" accept="image/*" required>
@@ -688,25 +687,6 @@
                             </div>
 
                             <h4 class="mt-4 mb-3"><i class="fas fa-tshirt me-2"></i>Select a Shirt</h4>
-
-
-                            
-<!--                             <div class="shirt-selection">
-                                {% for shirt in shirts %}
-                                <div class="shirt-item {% if loop.index0 == 0 %}selected{% endif %}">
-                                    <label>
-                                        <input type="radio" name="shirt_index" value="{{ loop.index0 }}" {% if loop.index0 == 0 %}checked{% endif %} hidden>
-                                        <img src="/static/shirts/{{ shirt }}" alt="{{ shirt }}">
-                                    </label>
-                                </div>
-                                {% endfor %}
-                            </div>
-
-                            <div class="text-center mt-4">
-                                <button type="submit" class="btn btn-primary btn-lg">
-                                    <i class="fas fa-magic me-2"></i>Try It On!
-                                </button>
-                            </div> -->
 
                             <div class="shirt-selection">
                                 {% for shirt in shirts %}
@@ -727,22 +707,13 @@
                                     <i class="fas fa-magic me-2"></i>Try It On!
                                 </button>
                             </div>
-                            
                         </form>
                     </div>
                 </div>
-
-
-
             </div>
         </div>
 
-
-
-
-
-
-
+        <!-- Style Assistant Card -->
         <div class="row mt-4">
             <div class="col-12">
                 <div class="card">
@@ -762,26 +733,9 @@
                                 <i class="fas fa-paper-plane"></i>
                             </button>
                         </div>
-
-
                     </div>
                 </div>
             </div>
-        </div>
-
-
-
-
-
-
-
-        <!-- Processing Message -->
-        <div id="processingMessage" class="processing-message">
-            <div class="d-flex justify-content-center mb-3">
-                <div class="spinner-border" role="status"></div>
-            </div>
-            <h3>Processing Your Image</h3>
-            <p>This usually takes about 10-15 seconds. Please wait...</p>
         </div>
 
         <!-- Results Section -->
@@ -792,7 +746,6 @@
                 <a id="downloadLink" class="btn btn-success btn-lg me-2">
                     <i class="fas fa-download me-2"></i> Download Image
                 </a>
-                <!-- Add Instagram button here -->
                 <button id="postResultToInstagramBtn" class="btn btn-instagram btn-lg">
                     <i class="fab fa-instagram me-2"></i> Post to Instagram
                 </button>
@@ -814,7 +767,7 @@
         </div>
     </footer>
 
-    <!-- Delete shirt feature -->
+    <!-- Delete Confirmation Modal -->
     <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content delete-confirm-modal">
@@ -833,184 +786,70 @@
         </div>
     </div>
 
+    <!-- Processing Modal -->
+    <div class="modal fade" id="processingModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <h5 class="mt-3">Processing Your Image</h5>
+                    <p>This usually takes about 10-15 seconds. Please wait...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
     <script>
+        // DOM Elements
         const uploadForm = document.getElementById('uploadForm');
         const userImageInput = document.getElementById('user_image');
         const userPreview = document.getElementById('userPreview');
         const placeholderText = document.querySelector('.placeholder-text');
-        const processingMessage = document.getElementById('processingMessage');
         const resultContainer = document.getElementById('resultContainer');
         const resultImage = document.getElementById('resultImage');
         const downloadLink = document.getElementById('downloadLink');
-        const shirtItems = document.querySelectorAll('.shirt-item');
-        const shirtRadios = document.querySelectorAll('input[name="shirt_index"]');
         const themeSwitcher = document.getElementById('themeSwitcher');
         const body = document.body;
-        const steps = document.querySelectorAll('.step');
-
-
-        // Chat functionality
         const chatContainer = document.getElementById('chatContainer');
         const chatInput = document.getElementById('chatInput');
         const sendChatBtn = document.getElementById('sendChatBtn');
-
-        // Add new Instagram button for results
         const postResultToInstagramBtn = document.getElementById('postResultToInstagramBtn');
+        const shirtSelection = document.querySelector('.shirt-selection');
+        const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 
+        // State
         let conversationHistory = [];
+        let shirtToDelete = null;
 
-
-        function addMessageToChat(message, isUser = false) {
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('chat-message', isUser ? 'user-message' : 'bot-message');
-            messageDiv.innerHTML = `<strong>${isUser ? 'You' : 'Style Assistant'}:</strong> ${message}`;
-            chatContainer.appendChild(messageDiv);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        async function sendMessageToCohere(message) {
-            try {
-                const response = await fetch('/cohere_chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: message,
-                        conversation: conversationHistory
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-
-                // Add bot response to chat
-                addMessageToChat(data.text);
-
-
-
-                return data.text;
-            } catch (error) {
-                console.error('Cohere chat error:', error);
-                addMessageToChat("Sorry, I'm having trouble connecting to the style assistant. Please try again later.");
+        // Initialize theme
+        function initTheme() {
+            const currentTheme = localStorage.getItem("theme") || "dark";
+            body.classList.add(currentTheme);
+            
+            if (body.classList.contains("dark")) {
+                themeSwitcher.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                themeSwitcher.innerHTML = '<i class="fas fa-moon"></i>';
             }
         }
 
-        async function generateOutfitImage(description) {
-            try {
-                const response = await fetch('/generate_outfit_image', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        description: description
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-
-                // Show the generated image
-                generatedOutfitImage.src = data.image_url;
-                generatedImageContainer.style.display = 'block';
-
-                // Set download link
-                downloadGeneratedBtn.onclick = () => {
-                    const link = document.createElement('a');
-                    link.href = data.image_url;
-                    link.download = `outfit-${Date.now().jpg}`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                };
-
-                return data.image_url;
-            } catch (error) {
-                console.error('Image generation error:', error);
-                addMessageToChat("Sorry, I couldn't generate an image of that outfit. Please try again.");
+        // Theme switcher
+        themeSwitcher.addEventListener("click", () => {
+            if (body.classList.contains("dark")) {
+                body.classList.replace("dark", "light");
+                localStorage.setItem("theme", "light");
+            } else {
+                body.classList.replace("light", "dark");
+                localStorage.setItem("theme", "dark");
             }
-        }
-
-        // Event listeners
-        sendChatBtn.addEventListener('click', async () => {
-            const message = chatInput.value.trim();
-            if (!message) return;
-
-            // Add user message to chat
-            addMessageToChat(message, true);
-            conversationHistory.push({ role: 'user', message: message });
-
-            // Clear input
-            chatInput.value = '';
-
-            // Send to Cohere
-            const botResponse = await sendMessageToCohere(message);
-
-
+            initTheme();
         });
 
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendChatBtn.click();
-            }
-        });
-
-        // Instagram posting
-        postToInstagramBtn.addEventListener('click', async () => {
-            if (!resultImage.src) return;
-
-            try {
-                const response = await fetch('/post_to_instagram', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        image_url: resultImage.src
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.error) {
-                    if (data.error.includes("Not authenticated")) {
-                        // Start Instagram auth flow
-                        window.location.href = '/instagram_auth';
-                    } else {
-                        alert(`Error: ${data.error}`);
-                    }
-                } else {
-                    alert('Successfully posted to Instagram!');
-                }
-            } catch (error) {
-                console.error('Instagram posting error:', error);
-                alert('Failed to post to Instagram. Please try again.');
-            }
-        });
-
-
-
-
-        // Handle shirt selection
-        shirtItems.forEach((item, index) => {
-            item.addEventListener('click', () => {
-                shirtItems.forEach(i => i.classList.remove('selected'));
-                item.classList.add('selected');
-                shirtRadios[index].checked = true;
-            });
-        });
-
-        // Preview user image
+        // User image preview
         userImageInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -1024,152 +863,173 @@
             }
         });
 
-        // Handle form submission
+        // Shirt selection handler
+        shirtSelection.addEventListener('click', (e) => {
+            const shirtItem = e.target.closest('.shirt-item');
+            if (!shirtItem) return;
+            
+            // Remove selection from all items
+            document.querySelectorAll('.shirt-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Add selection to clicked item
+            shirtItem.classList.add('selected');
+            
+            // Update radio button
+            const radio = shirtItem.querySelector('input[type="radio"]');
+            if (radio) radio.checked = true;
+        });
+
+        // Form submission
         uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            // Show processing message
-            processingMessage.style.display = 'block';
-            resultContainer.style.display = 'none';
             
-            // Scroll to processing message
-            processingMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Show processing modal
+            const processingModal = new bootstrap.Modal(document.getElementById('processingModal'));
+            processingModal.show();
             
-            // Update step indicator
-            steps[0].classList.remove('active');
-            steps[1].classList.add('active');
-
             const formData = new FormData(uploadForm);
-
+            
             try {
                 const response = await fetch('/upload', {
                     method: 'POST',
                     body: formData
                 });
-
+                
                 const result = await response.json();
-
-                if (response.ok && result.success) {
+                
+                if (result.success) {
                     resultImage.src = result.processed_url;
                     downloadLink.href = result.processed_url;
                     downloadLink.download = `virtual-tryon-${Date.now()}.jpg`;
-
+                    
                     // Hide processing, show result
-                    setTimeout(() => {
-                        processingMessage.style.display = 'none';
-                        resultContainer.style.display = 'block';
-                        resultContainer.scrollIntoView({ behavior: 'smooth' });
-                        
-                        // Update step indicator
-                        steps[1].classList.remove('active');
-                        steps[2].classList.add('active');
-                    }, 1000);
+                    processingModal.hide();
+                    resultContainer.style.display = 'block';
+                    resultContainer.scrollIntoView({ behavior: 'smooth' });
                 } else {
                     throw new Error(result.error || 'Image processing failed');
                 }
             } catch (error) {
-                processingMessage.style.display = 'none';
+                processingModal.hide();
                 alert('Error: ' + error.message);
-                
-                // Reset step indicator
-                steps[1].classList.remove('active');
-                steps[0].classList.add('active');
             }
         });
 
-        // Theme switcher
-        const currentTheme = localStorage.getItem("theme") || "dark";
-        body.classList.add(currentTheme);
+        // Chat functionality
+        function addMessageToChat(message, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('chat-message', isUser ? 'user-message' : 'bot-message');
+            messageDiv.innerHTML = `<strong>${isUser ? 'You' : 'Style Assistant'}:</strong> ${message}`;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
 
-        const updateIcon = () => {
-            if (body.classList.contains("dark")) {
-                themeSwitcher.innerHTML = '<i class="fas fa-moon"></i>';
-            } else {
-                themeSwitcher.innerHTML = '<i class="fas fa-sun"></i>';
+        async function sendMessageToCohere(message) {
+            try {
+                const response = await fetch('/cohere_chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        message: message,
+                        conversation: conversationHistory
+                    })
+                });
+
+                const data = await response.json();
+                return data.text;
+            } catch (error) {
+                console.error('Cohere chat error:', error);
+                return "Sorry, I'm having trouble connecting to the style assistant. Please try again later.";
             }
-        };
+        }
 
-        updateIcon();
+        sendChatBtn.addEventListener('click', async () => {
+            const message = chatInput.value.trim();
+            if (!message) return;
 
-        themeSwitcher.addEventListener("click", () => {
-            if (body.classList.contains("dark")) {
-                body.classList.replace("dark", "light");
-                localStorage.setItem("theme", "light");
-            } else {
-                body.classList.replace("light", "dark");
-                localStorage.setItem("theme", "dark");
-            }
-            updateIcon();
+            // Add user message to chat
+            addMessageToChat(message, true);
+            conversationHistory.push({ role: 'user', message: message });
+            chatInput.value = '';
+
+            // Send to Cohere and add response
+            const botResponse = await sendMessageToCohere(message);
+            addMessageToChat(botResponse);
+            conversationHistory.push({ role: 'bot', message: botResponse });
         });
-        
-        // Add subtle animation to cards on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            const cards = document.querySelectorAll('.card');
-            cards.forEach((card, index) => {
-                setTimeout(() => {
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }, 300 + (index * 200));
-            });
+
+        chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendChatBtn.click();
+            }
+        });
+
+        // Instagram posting
+        postResultToInstagramBtn.addEventListener('click', async () => {
+            if (!resultImage.src) return;
+
+            try {
+                const response = await fetch('/post_to_instagram', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ image_url: resultImage.src })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Successfully posted to Instagram!');
+                } else if (data.error && data.error.includes("Not authenticated")) {
+                    window.location.href = '/instagram_auth';
+                } else {
+                    alert(`Error: ${data.error}`);
+                }
+            } catch (error) {
+                console.error('Instagram posting error:', error);
+                alert('Failed to post to Instagram. Please try again.');
+            }
         });
 
         // Delete shirt feature
-        const deleteConfirmModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-        const fileNameDisplay = document.getElementById('fileNameDisplay');
-        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-        let shirtToDelete = null;
-
-        // Add this function to handle shirt deletion
-        function handleShirtDeletion() {
-            if (!shirtToDelete) return;
-            
-            fetch(`/delete_shirt/${shirtToDelete}`, {
-                method: 'DELETE'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Remove the shirt from UI
-                    document.querySelectorAll('.shirt-item').forEach(item => {
-                        if (item.querySelector('img').src.includes(shirtToDelete)) {
-                            item.remove();
-                        }
-                    });
-                    
-                    // Update radio buttons
-                    const firstShirt = document.querySelector('.shirt-item');
-                    if (firstShirt) {
-                        firstShirt.classList.add('selected');
-                        firstShirt.querySelector('input[type="radio"]').checked = true;
-                    }
-                } else {
-                    alert('Error: ' + (data.error || 'Failed to delete shirt'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while deleting the shirt.');
-            })
-            .finally(() => {
-                shirtToDelete = null;
-                deleteConfirmModal.hide();
-            });
-        }
-
-        // Add this event listener for delete buttons
         document.addEventListener('click', function(e) {
             if (e.target.closest('.shirt-delete-btn')) {
                 e.stopPropagation();
                 const button = e.target.closest('.shirt-delete-btn');
                 shirtToDelete = button.dataset.filename;
-                fileNameDisplay.textContent = shirtToDelete;
+                document.getElementById('fileNameDisplay').textContent = shirtToDelete;
                 deleteConfirmModal.show();
             }
         });
 
-        // Bind the delete confirmation
-        confirmDeleteBtn.addEventListener('click', handleShirtDeletion);
-        
+        confirmDeleteBtn.addEventListener('click', async () => {
+            if (!shirtToDelete) return;
+            
+            try {
+                const response = await fetch(`/delete_shirt/${shirtToDelete}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Reload shirts by refreshing the page
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to delete shirt'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the shirt.');
+            } finally {
+                shirtToDelete = null;
+                deleteConfirmModal.hide();
+            }
+        });
+
+        // Initialize theme on load
+        document.addEventListener('DOMContentLoaded', initTheme);
     </script>
 </body>
 </html>
