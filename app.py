@@ -709,7 +709,7 @@ def process_image(user_image_path, shirt_index):
 
     # Create pose visualization
     pose_img = detector.findPose(pose_img)
-    lmList, bboxInfo = detector.findPosition(pose_img, bboxWithHands=False, draw=False)
+    lmList, bboxInfo = detector.findPosition(img, bboxWithHands=False, draw=False)
 
     shirts = get_shirt_list()
     if not shirts:
