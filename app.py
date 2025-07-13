@@ -708,7 +708,7 @@ def process_image(user_image_path, shirt_index):
         raise ValueError("Failed to load user image")
 
     # Create pose visualization
-    pose_img = detector.findPose(pose_img)
+    img = detector.findPose(img)
     lmList, bboxInfo = detector.findPosition(img, bboxWithHands=False, draw=False)
 
     shirts = get_shirt_list()
