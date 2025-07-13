@@ -14,13 +14,13 @@ from logging.handlers import RotatingFileHandler
 import shutil
 
 
-# # OpenCV compatibility workaround
-# np.int = int
-# np.float = float
-# np.bool = bool
+# OpenCV compatibility workaround
+np.int = int
+np.float = float
+np.bool = bool
 
-# if not hasattr(cv2.dnn, 'DictValue'):
-#     cv2.dnn.DictValue = type('DictValue', (), {})
+if not hasattr(cv2.dnn, 'DictValue'):
+    cv2.dnn.DictValue = type('DictValue', (), {})
 
 app = Flask(__name__)
 
@@ -89,7 +89,7 @@ def delete_shirt(filename):
         return jsonify({"error": "Internal server error"}), 500
 
 
-def overlay_transparent(background, overlay, alpha_blend=1.0):
+def overlay_transparent(background, overlay, alpha_blend=0.7):
     try:
         if overlay.shape[2] == 4:
             b, g, r, a = cv2.split(overlay)
@@ -98,17 +98,13 @@ def overlay_transparent(background, overlay, alpha_blend=1.0):
             a = np.ones_like(b) * 255
 
         # (Optional) Disable green-screen removal for testing
-        # green_mask = (g > 150) & (r < 100) & (b < 100)
-        # a[green_mask] = 0
+        green_mask = (g > 150) & (r < 100) & (b < 100)
+        a[green_mask] = 0
 
         alpha = (a / 255.0) * alpha_blend
-        alpha_inv = 1.0 - alpha
 
         for c in range(3):
-            background[:, :, c] = (
-                alpha * overlay[:, :, c] +
-                alpha_inv * background[:, :, c]
-            ).astype(np.uint8)
+            background[:, :, c] = (alpha * overlay[:, :, c] + (1 - alpha) * background[:, :, c])
 
         return background
     except Exception as e:
@@ -712,7 +708,6 @@ def process_image(user_image_path, shirt_index):
         raise ValueError("Failed to load user image")
 
     # Create pose visualization
-    pose_img = img.copy()
     pose_img = detector.findPose(pose_img)
     lmList, bboxInfo = detector.findPosition(pose_img, bboxWithHands=False, draw=False)
 
@@ -727,21 +722,21 @@ def process_image(user_image_path, shirt_index):
             raise ValueError(f"Failed to load shirt image: {shirt_path}")
 
         # Get original landmarks
-        left_shoulder_orig = np.array(lmList[11][1:3])
-        right_shoulder_orig = np.array(lmList[12][1:3])
-        left_hip_orig = np.array(lmList[23][1:3])
-        right_hip_orig = np.array(lmList[24][1:3])
+        left_shoulder = np.array(lmList[11][1:3])
+        right_shoulder = np.array(lmList[12][1:3])
+        left_hip = np.array(lmList[23][1:3])
+        right_hip = np.array(lmList[24][1:3])
 
         # Calculate center point
-        center_x = np.mean([left_shoulder_orig[0], right_shoulder_orig[0], 
-                            left_hip_orig[0], right_hip_orig[0]])
-        center_y = np.mean([left_shoulder_orig[1], right_shoulder_orig[1], 
-                            left_hip_orig[1], right_hip_orig[1]])
+        center_x = np.mean([left_shoulder[0], right_shoulder[0], 
+                            left_hip[0], right_hip[0]])
+        center_y = np.mean([left_shoulder[1], right_shoulder[1], 
+                            left_hip[1], right_hip[1]])
         
         # Calculate dimensions with scale factor
         scale = 1.5
-        shoulder_width = abs(left_shoulder_orig[0] - right_shoulder_orig[0]) * scale
-        hip_height = abs(left_hip_orig[1] - left_shoulder_orig[1]) * scale
+        shoulder_width = abs(left_shoulder[0] - right_shoulder[0]) * scale
+        hip_height = abs(left_hip[1] - left_shoulder[1]) * scale
 
         # Create synthetic torso points
         left_shoulder = [center_x - shoulder_width / 2, center_y - hip_height / 2]
@@ -767,19 +762,21 @@ def process_image(user_image_path, shirt_index):
 
         # Calculate transformation matrix
         matrix = cv2.getPerspectiveTransform(src_pts, dst_pts)
+
+        warped = cv2.warpPerspective(imgShirt, matrix, (img.shape[1], img.shape[0]), borderValue=(0, 0, 0, 0))
         
         # Warp shirt with border handling
-        warped = cv2.warpPerspective(
-            imgShirt, 
-            matrix, 
-            (img.shape[1], img.shape[0]),
-            flags=cv2.INTER_LANCZOS4,
-            borderMode=cv2.BORDER_CONSTANT,
-            borderValue=(0, 0, 0, 0)
-        )
+        # warped = cv2.warpPerspective(
+        #     imgShirt, 
+        #     matrix, 
+        #     (img.shape[1], img.shape[0]),
+        #     flags=cv2.INTER_LANCZOS4,
+        #     borderMode=cv2.BORDER_CONSTANT,
+        #     borderValue=(0, 0, 0, 0)
+        # )
 
         # Overlay with transparency
-        result = overlay_transparent(img, warped, alpha_blend=0.95)
+        result = overlay_transparent(img, warped)
 
         # Save processed image
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
