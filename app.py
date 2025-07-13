@@ -123,11 +123,11 @@ def process_image(user_image_path, shirt_index):
 
 
 
-        # Aspect Ratio Preservation
-        shirt_aspect = imgShirt.shape[1] / imgShirt.shape[0]
-        calculated_aspect = shoulder_width / hip_height
-        if abs(calculated_aspect - shirt_aspect) > shirt_aspect * 0.3:
-            hip_height = shoulder_width / shirt_aspect
+        # # Aspect Ratio Preservation
+        # shirt_aspect = imgShirt.shape[1] / imgShirt.shape[0]
+        # calculated_aspect = shoulder_width / hip_height
+        # if abs(calculated_aspect - shirt_aspect) > shirt_aspect * 0.3:
+        #     hip_height = shoulder_width / shirt_aspect
 
         # Create synthetic torso points
         left_shoulder = [center_x - shoulder_width / 2, center_y - hip_height / 2]
