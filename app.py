@@ -643,7 +643,7 @@ def process_image(user_image_path, shirt_index):
         torso_center_y = int((left_shoulder[1] + right_shoulder[1] + left_hip[1] + right_hip[1]) / 4)
 
         # Calculate torso dimensions
-        torso_width = int(np.linalg.norm(left_shoulder - right_shoulder) * 1.8
+        torso_width = int(np.linalg.norm(left_shoulder - right_shoulder)) * 1.8
         torso_height = int(np.linalg.norm(left_shoulder - left_hip)) * 1.5
 
         # Calculate shirt position
