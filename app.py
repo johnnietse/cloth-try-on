@@ -87,6 +87,80 @@ def overlay_transparent(background, overlay, alpha_blend=0.7):
 
 
 
+# def process_image(user_image_path, shirt_index):
+#     detector = PoseDetector()
+#     img = cv2.imread(user_image_path)
+#     if img is None:
+#         raise ValueError("Failed to load user image")
+
+#     img = detector.findPose(img)
+#     lmList, bboxInfo = detector.findPosition(img, bboxWithHands=False, draw=False)
+
+#     shirts = get_shirt_list()
+#     if not shirts:
+#         raise ValueError("No shirt images found")
+
+#     if lmList and len(lmList) > 24:
+#         shirt_path = os.path.join(app.config['SHIRT_FOLDER'], shirts[shirt_index])
+#         imgShirt = cv2.imread(shirt_path, cv2.IMREAD_UNCHANGED)
+#         if imgShirt is None:
+#             raise ValueError(f"Failed to load shirt image: {shirt_path}")
+
+#         # Get original landmarks
+#         left_shoulder = np.array(lmList[11][1:3])
+#         right_shoulder = np.array(lmList[12][1:3])
+#         left_hip = np.array(lmList[23][1:3])
+#         right_hip = np.array(lmList[24][1:3])
+
+#         # Calculate center point
+#         center_x = np.mean([left_shoulder[0], right_shoulder[0], left_hip[0], right_hip[0]])
+#         center_y = np.mean([left_shoulder[1], right_shoulder[1], left_hip[1], right_hip[1]])
+        
+#         # Calculate dimensions with scale factor
+#         scale = 1.5
+#         shoulder_width = abs(left_shoulder[0] - right_shoulder[0])*scale
+#         hip_height = abs(left_hip[1] - left_shoulder[1])*scale
+
+#         # Create synthetic torso points
+#         left_shoulder = [center_x - shoulder_width / 2, center_y - hip_height / 2]
+#         right_shoulder = [center_x + shoulder_width / 2, center_y - hip_height / 2]
+#         left_hip = [center_x - shoulder_width / 2, center_y + hip_height / 2]
+#         right_hip = [center_x + shoulder_width / 2, center_y + hip_height / 2]
+
+#         # Perspective transformation
+#         src_pts = np.float32([
+#             [0, 0],  
+#             [imgShirt.shape[1], 0],  
+#             [imgShirt.shape[1], imgShirt.shape[0]],  
+#             [0, imgShirt.shape[0]]   
+#         ])
+        
+#         # Apply vertical offset to shoulders (+30px)
+#         dst_pts = np.float32([
+#             [left_shoulder[0], left_shoulder[1] + 30], 
+#             [right_shoulder[0], right_shoulder[1] + 30], 
+#             [right_hip[0], right_hip[1]], 
+#             [left_hip[0], left_hip[1]] 
+#         ])
+
+#         # Calculate transformation matrix
+#         matrix = cv2.getPerspectiveTransform(src_pts, dst_pts)
+
+#         warped = cv2.warpPerspective(imgShirt, matrix, (img.shape[1], img.shape[0]), borderValue=(0, 0, 0, 0))
+        
+#         # Overlay with transparency
+#         result = overlay_transparent(img, warped)
+
+#         # Save processed image
+#         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+#         processed_filename = f"processed_{timestamp}.jpg"
+#         processed_path = os.path.join(app.config['PROCESSED_FOLDER'], processed_filename)
+#         cv2.imwrite(processed_path, result)
+
+#         return processed_filename
+#     else:
+#         raise ValueError("Pose detection failed - could not find body landmarks")
+
 def process_image(user_image_path, shirt_index):
     detector = PoseDetector()
     img = cv2.imread(user_image_path)
@@ -106,50 +180,66 @@ def process_image(user_image_path, shirt_index):
         if imgShirt is None:
             raise ValueError(f"Failed to load shirt image: {shirt_path}")
 
-        # Get original landmarks
+        # Get all relevant landmarks
         left_shoulder = np.array(lmList[11][1:3])
         right_shoulder = np.array(lmList[12][1:3])
+        left_elbow = np.array(lmList[13][1:3])
+        right_elbow = np.array(lmList[14][1:3])
         left_hip = np.array(lmList[23][1:3])
         right_hip = np.array(lmList[24][1:3])
 
-        # Calculate center point
-        center_x = np.mean([left_shoulder[0], right_shoulder[0], left_hip[0], right_hip[0]])
-        center_y = np.mean([left_shoulder[1], right_shoulder[1], left_hip[1], right_hip[1]])
         
-        # Calculate dimensions with scale factor
-        scale = 1.5
-        shoulder_width = abs(left_shoulder[0] - right_shoulder[0])*scale
-        hip_height = abs(left_hip[1] - left_shoulder[1])*scale
+        # Calculate dynamic scale factor based on body proportions
+        shoulder_width = np.linalg.norm(left_shoulder - right_shoulder)
+        torso_height = np.linalg.norm(
+            (left_shoulder + right_shoulder)/2 - 
+            (left_hip + right_hip)/2
+        )
+        scale = 1.2  # More reasonable scale factor
+        
+        # Calculate shirt dimensions
+        shirt_width = shoulder_width * scale
+        shirt_height = torso_height * scale * 1.3  # 30% longer than torso
 
-        # Create synthetic torso points
-        left_shoulder = [center_x - shoulder_width / 2, center_y - hip_height / 2]
-        right_shoulder = [center_x + shoulder_width / 2, center_y - hip_height / 2]
-        left_hip = [center_x - shoulder_width / 2, center_y + hip_height / 2]
-        right_hip = [center_x + shoulder_width / 2, center_y + hip_height / 2]
+        # Calculate anchor points
+        top_center = (left_shoulder + right_shoulder) / 2
+        bottom_center = (left_hip + right_hip) / 2
+        
+        # Create destination points with dynamic offset
+        shoulder_offset = shirt_height * 0.1  # 10% of shirt height
+        dst_pts = np.float32([
+            [top_center[0] - shirt_width/2, top_center[1] - shoulder_offset],  # Top-left
+            [top_center[0] + shirt_width/2, top_center[1] - shoulder_offset],  # Top-right
+            [right_hip[0], bottom_center[1]],  # Bottom-right
+            [left_hip[0], bottom_center[1]]   # Bottom-left
+        ])
 
         # Perspective transformation
         src_pts = np.float32([
-            [0, 0],  
-            [imgShirt.shape[1], 0],  
-            [imgShirt.shape[1], imgShirt.shape[0]],  
-            [0, imgShirt.shape[0]]   
+            [0, 0],
+            [imgShirt.shape[1], 0],
+            [imgShirt.shape[1], imgShirt.shape[0]],
+            [0, imgShirt.shape[0]]
         ])
         
-        # Apply vertical offset to shoulders (+30px)
-        dst_pts = np.float32([
-            [left_shoulder[0], left_shoulder[1] + 30], 
-            [right_shoulder[0], right_shoulder[1] + 30], 
-            [right_hip[0], right_hip[1]], 
-            [left_hip[0], left_hip[1]] 
-        ])
-
-        # Calculate transformation matrix
         matrix = cv2.getPerspectiveTransform(src_pts, dst_pts)
-
-        warped = cv2.warpPerspective(imgShirt, matrix, (img.shape[1], img.shape[0]), borderValue=(0, 0, 0, 0))
+        warped = cv2.warpPerspective(
+            imgShirt, 
+            matrix, 
+            (img.shape[1], img.shape[0]), 
+            flags=cv2.INTER_LINEAR,
+            borderMode=cv2.BORDER_CONSTANT, 
+            borderValue=(0, 0, 0, 0)
+        )
         
-        # Overlay with transparency
+        # Enhanced overlay with blending
         result = overlay_transparent(img, warped)
+
+
+        # Visualize destination points on the result
+        for pt in dst_pts:
+            cv2.circle(result, tuple(map(int, pt)), 8, (0, 255, 0), -1)
+
 
         # Save processed image
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
