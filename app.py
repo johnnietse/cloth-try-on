@@ -611,17 +611,111 @@ def overlay_transparent(background, overlay, alpha_blend=1.0):
 #     else:
 #         raise ValueError("Pose detection failed - could not find body landmarks")
 
+# def process_image(user_image_path, shirt_index):
+#     detector = PoseDetector()
+#     img = cv2.imread(user_image_path)
+#     if img is None:
+#         raise ValueError("Failed to load user image")
+
+#     # Create a copy for pose detection
+#     img_pose = img.copy()
+#     img_pose = detector.findPose(img_pose)
+#     lmList, bboxInfo = detector.findPosition(img_pose, bboxWithHands=False, draw=False)
+    
+#     shirts = get_shirt_list()
+#     if not shirts:
+#         raise ValueError("No shirt images found")
+
+#     if lmList and len(lmList) > 24:
+#         shirt_path = os.path.join(app.config['SHIRT_FOLDER'], shirts[shirt_index])
+#         imgShirt = cv2.imread(shirt_path, cv2.IMREAD_UNCHANGED)
+#         if imgShirt is None or imgShirt.shape[2] != 4:
+#             raise ValueError(f"Failed to load valid shirt image with alpha channel: {shirt_path}")
+
+#         # Get key points (using more reliable landmarks)
+#         left_shoulder = np.array(lmList[11][1:3])
+#         right_shoulder = np.array(lmList[12][1:3])
+#         left_hip = np.array(lmList[23][1:3])
+#         right_hip = np.array(lmList[24][1:3])
+
+#         # Calculate torso center
+#         torso_center_x = int((left_shoulder[0] + right_shoulder[0] + left_hip[0] + right_hip[0]) / 4)
+#         torso_center_y = int((left_shoulder[1] + right_shoulder[1] + left_hip[1] + right_hip[1]) / 4)
+
+#         # Calculate torso dimensions
+#         torso_width = int(np.linalg.norm(left_shoulder - right_shoulder) * 1.8)
+#         torso_height = int(np.linalg.norm(left_shoulder - left_hip) * 1.5)
+
+#         # Calculate shirt position
+#         shirt_top = torso_center_y - int(torso_height * 0.4)
+#         shirt_bottom = torso_center_y + int(torso_height * 0.6)
+#         shirt_left = torso_center_x - int(torso_width / 2)
+#         shirt_right = torso_center_x + int(torso_width / 2)
+
+#         # Ensure coordinates are within image bounds
+#         h, w = img.shape[:2]
+#         shirt_top = max(0, shirt_top)
+#         shirt_bottom = min(h, shirt_bottom)
+#         shirt_left = max(0, shirt_left)
+#         shirt_right = min(w, shirt_right)
+
+#         # Calculate scale factors
+#         scale_x = (shirt_right - shirt_left) / imgShirt.shape[1]
+#         scale_y = (shirt_bottom - shirt_top) / imgShirt.shape[0]
+        
+#         # Resize shirt while maintaining aspect ratio
+#         scale = min(scale_x, scale_y) * 0.95  # Slightly undersize to fit better
+#         new_width = int(imgShirt.shape[1] * scale)
+#         new_height = int(imgShirt.shape[0] * scale)
+#         resized_shirt = cv2.resize(imgShirt, (new_width, new_height))
+
+#         # Calculate position to center the shirt
+#         x_offset = torso_center_x - new_width // 2
+#         y_offset = shirt_top
+        
+#         # Create overlay mask
+#         overlay = img.copy()
+#         alpha_s = resized_shirt[:, :, 3] / 255.0
+#         alpha_l = 1.0 - alpha_s
+
+#         # Blend the shirt onto the overlay
+#         for c in range(0, 3):
+#             try:
+#                 overlay[y_offset:y_offset+new_height, x_offset:x_offset+new_width, c] = (
+#                     alpha_s * resized_shirt[:, :, c] + 
+#                     alpha_l * overlay[y_offset:y_offset+new_height, x_offset:x_offset+new_width, c]
+#                 )
+#             except:
+#                 # Handle boundary issues
+#                 pass
+
+#         # Final blend with original image
+#         alpha = 0.7  # Blend factor
+#         result = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
+
+#         # Save processed image
+#         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+#         processed_filename = f"processed_{timestamp}.jpg"
+#         processed_path = os.path.join(app.config['PROCESSED_FOLDER'], processed_filename)
+#         cv2.imwrite(processed_path, result)
+
+#         return processed_filename
+#     else:
+#         raise ValueError("Pose detection failed - could not find body landmarks")
+
+
+
 def process_image(user_image_path, shirt_index):
     detector = PoseDetector()
     img = cv2.imread(user_image_path)
     if img is None:
         raise ValueError("Failed to load user image")
 
-    # Create a copy for pose detection
-    img_pose = img.copy()
-    img_pose = detector.findPose(img_pose)
-    lmList, bboxInfo = detector.findPosition(img_pose, bboxWithHands=False, draw=False)
-    
+    # Create pose visualization
+    pose_img = img.copy()
+    pose_img = detector.findPose(pose_img)
+    lmList, bboxInfo = detector.findPosition(pose_img, bboxWithHands=False, draw=False)
+
     shirts = get_shirt_list()
     if not shirts:
         raise ValueError("No shirt images found")
@@ -629,69 +723,63 @@ def process_image(user_image_path, shirt_index):
     if lmList and len(lmList) > 24:
         shirt_path = os.path.join(app.config['SHIRT_FOLDER'], shirts[shirt_index])
         imgShirt = cv2.imread(shirt_path, cv2.IMREAD_UNCHANGED)
-        if imgShirt is None or imgShirt.shape[2] != 4:
-            raise ValueError(f"Failed to load valid shirt image with alpha channel: {shirt_path}")
+        if imgShirt is None:
+            raise ValueError(f"Failed to load shirt image: {shirt_path}")
 
-        # Get key points (using more reliable landmarks)
-        left_shoulder = np.array(lmList[11][1:3])
-        right_shoulder = np.array(lmList[12][1:3])
-        left_hip = np.array(lmList[23][1:3])
-        right_hip = np.array(lmList[24][1:3])
+        # Get original landmarks
+        left_shoulder_orig = np.array(lmList[11][1:3])
+        right_shoulder_orig = np.array(lmList[12][1:3])
+        left_hip_orig = np.array(lmList[23][1:3])
+        right_hip_orig = np.array(lmList[24][1:3])
 
-        # Calculate torso center
-        torso_center_x = int((left_shoulder[0] + right_shoulder[0] + left_hip[0] + right_hip[0]) / 4)
-        torso_center_y = int((left_shoulder[1] + right_shoulder[1] + left_hip[1] + right_hip[1]) / 4)
-
-        # Calculate torso dimensions
-        torso_width = int(np.linalg.norm(left_shoulder - right_shoulder) * 1.8)
-        torso_height = int(np.linalg.norm(left_shoulder - left_hip) * 1.5)
-
-        # Calculate shirt position
-        shirt_top = torso_center_y - int(torso_height * 0.4)
-        shirt_bottom = torso_center_y + int(torso_height * 0.6)
-        shirt_left = torso_center_x - int(torso_width / 2)
-        shirt_right = torso_center_x + int(torso_width / 2)
-
-        # Ensure coordinates are within image bounds
-        h, w = img.shape[:2]
-        shirt_top = max(0, shirt_top)
-        shirt_bottom = min(h, shirt_bottom)
-        shirt_left = max(0, shirt_left)
-        shirt_right = min(w, shirt_right)
-
-        # Calculate scale factors
-        scale_x = (shirt_right - shirt_left) / imgShirt.shape[1]
-        scale_y = (shirt_bottom - shirt_top) / imgShirt.shape[0]
+        # Calculate center point
+        center_x = np.mean([left_shoulder_orig[0], right_shoulder_orig[0], 
+                            left_hip_orig[0], right_hip_orig[0]])
+        center_y = np.mean([left_shoulder_orig[1], right_shoulder_orig[1], 
+                            left_hip_orig[1], right_hip_orig[1]])
         
-        # Resize shirt while maintaining aspect ratio
-        scale = min(scale_x, scale_y) * 0.95  # Slightly undersize to fit better
-        new_width = int(imgShirt.shape[1] * scale)
-        new_height = int(imgShirt.shape[0] * scale)
-        resized_shirt = cv2.resize(imgShirt, (new_width, new_height))
+        # Calculate dimensions with scale factor
+        scale = 1.5
+        shoulder_width = abs(left_shoulder_orig[0] - right_shoulder_orig[0]) * scale
+        hip_height = abs(left_hip_orig[1] - left_shoulder_orig[1]) * scale
 
-        # Calculate position to center the shirt
-        x_offset = torso_center_x - new_width // 2
-        y_offset = shirt_top
+        # Create synthetic torso points
+        left_shoulder = [center_x - shoulder_width / 2, center_y - hip_height / 2]
+        right_shoulder = [center_x + shoulder_width / 2, center_y - hip_height / 2]
+        left_hip = [center_x - shoulder_width / 2, center_y + hip_height / 2]
+        right_hip = [center_x + shoulder_width / 2, center_y + hip_height / 2]
+
+        # Perspective transformation
+        src_pts = np.float32([
+            [0, 0],  # top-left
+            [imgShirt.shape[1], 0],  # top-right
+            [imgShirt.shape[1], imgShirt.shape[0]],  # bottom-right
+            [0, imgShirt.shape[0]]   # bottom-left
+        ])
         
-        # Create overlay mask
-        overlay = img.copy()
-        alpha_s = resized_shirt[:, :, 3] / 255.0
-        alpha_l = 1.0 - alpha_s
+        # Apply vertical offset to shoulders (+30px)
+        dst_pts = np.float32([
+            [left_shoulder[0], left_shoulder[1] + 30],  # top-left
+            [right_shoulder[0], right_shoulder[1] + 30],  # top-right
+            [right_hip[0], right_hip[1]],  # bottom-right
+            [left_hip[0], left_hip[1]]   # bottom-left
+        ])
 
-        # Blend the shirt onto the overlay
-        for c in range(0, 3):
-            try:
-                overlay[y_offset:y_offset+new_height, x_offset:x_offset+new_width, c] = (
-                    alpha_s * resized_shirt[:, :, c] + 
-                    alpha_l * overlay[y_offset:y_offset+new_height, x_offset:x_offset+new_width, c]
-                )
-            except:
-                # Handle boundary issues
-                pass
+        # Calculate transformation matrix
+        matrix = cv2.getPerspectiveTransform(src_pts, dst_pts)
+        
+        # Warp shirt with border handling
+        warped = cv2.warpPerspective(
+            imgShirt, 
+            matrix, 
+            (img.shape[1], img.shape[0]),
+            flags=cv2.INTER_LANCZOS4,
+            borderMode=cv2.BORDER_CONSTANT,
+            borderValue=(0, 0, 0, 0)
+        )
 
-        # Final blend with original image
-        alpha = 0.7  # Blend factor
-        result = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
+        # Overlay with transparency
+        result = overlay_transparent(img, warped, alpha_blend=0.95)
 
         # Save processed image
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
