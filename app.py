@@ -64,26 +64,59 @@ def get_shirt_list():
         return []
 
 
-def overlay_transparent(background, overlay, alpha_blend=0.7):
+
+def overlay_transparent(background, overlay, alpha_blend=1.0):
     try:
+        # Split overlay into color and alpha channels
         if overlay.shape[2] == 4:
             b, g, r, a = cv2.split(overlay)
+            alpha = a.astype(float) / 255.0
         else:
             b, g, r = cv2.split(overlay)
-            a = np.ones_like(b) * 255
-
+            alpha = np.ones_like(b, dtype=float)
+        
+        # Remove green screen background
         green_mask = (g > 150) & (r < 100) & (b < 100)
-        a[green_mask] = 0
-
-        alpha = (a / 255.0)*alpha_blend
-
+        alpha[green_mask] = 0
+        
+        # Apply alpha blending
+        alpha = alpha * alpha_blend
+        inv_alpha = 1.0 - alpha
+        
+        # Blend channels
         for c in range(3):
-            background[:, :, c] = (alpha * overlay[:, :, c] + (1 - alpha) * background[:, :, c])
+            background_channel = background[:, :, c].astype(float)
+            overlay_channel = overlay[:, :, c].astype(float)
+            background[:, :, c] = np.clip(
+                alpha * overlay_channel + inv_alpha * background_channel, 
+                0, 255
+            ).astype(np.uint8)
 
         return background
     except Exception as e:
         app.logger.error(f"overlay_transparent failed: {e}")
         return background
+
+# def overlay_transparent(background, overlay, alpha_blend=0.7):
+#     try:
+#         if overlay.shape[2] == 4:
+#             b, g, r, a = cv2.split(overlay)
+#         else:
+#             b, g, r = cv2.split(overlay)
+#             a = np.ones_like(b) * 255
+
+#         green_mask = (g > 150) & (r < 100) & (b < 100)
+#         a[green_mask] = 0
+
+#         alpha = (a / 255.0)*alpha_blend
+
+#         for c in range(3):
+#             background[:, :, c] = (alpha * overlay[:, :, c] + (1 - alpha) * background[:, :, c])
+
+#         return background
+#     except Exception as e:
+#         app.logger.error(f"overlay_transparent failed: {e}")
+#         return background
 
 
 
