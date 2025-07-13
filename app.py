@@ -19,8 +19,7 @@ np.int = int
 np.float = float
 np.bool = bool
 
-# if not hasattr(cv2.dnn, 'DictValue'):
-#     cv2.dnn.DictValue = type('DictValue', (), {})
+
 
 app = Flask(__name__)
 
