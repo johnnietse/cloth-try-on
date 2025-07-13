@@ -92,7 +92,7 @@ def process_image(user_image_path, shirt_index):
     if img is None:
         raise ValueError("Failed to load user image")
 
-    img = detector.findPose(img)
+    img = detector.findPose(img, draw=False)
     lmList, bboxInfo = detector.findPosition(img, bboxWithHands=False, draw=False)
 
     shirts = get_shirt_list()
