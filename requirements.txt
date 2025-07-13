@@ -21,3 +21,8 @@ flatbuffers
 matplotlib
 sounddevice
 scipy
+
+
+# prevent accidental reinstallation of conflicting wheels
+opencv-python==none
+opencv-python-headless==none
