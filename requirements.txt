@@ -1,28 +1,9 @@
-# Core packages
-Flask==2.0.1
-Werkzeug==2.0.1
-gunicorn==20.1.0
+﻿Flask==2.0.1
+opencv-python-headless==4.5.4.60
+cvzone==1.5.6
+numpy==1.21.6
 python-dotenv==0.19.0
-requests
-
-# Image processing
-opencv-contrib-python==4.5.4.60      # includes all OpenCV modules
-numpy==1.21.6                        # compatible with cvzone
-
-# AI / ML
-mediapipe==0.10.5                    # tested working with cvzone
-cvzone==1.5.6                        # needs older numpy (<1.24)
-
-# Utils & visualization
-protobuf==3.20.3                     # required by mediapipe
-absl-py
-attrs
-flatbuffers
-matplotlib
-sounddevice
-scipy
-
-
-# prevent accidental reinstallation of conflicting wheels
-opencv-python==none
-opencv-python-headless==none
+gunicorn==20.1.0
+Werkzeug==2.0.1
+protobuf==3.20.3
+mediapipe==0.10.5
