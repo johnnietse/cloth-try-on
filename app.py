@@ -16,6 +16,24 @@ import shutil
 import secrets
 
 
+# Add this before any other imports
+import pkg_resources
+
+required = {
+    'Flask': '2.0.1',
+    'opencv-python-headless': '4.5.4.60',
+    'numpy': '1.21.6',
+    'protobuf': '3.20.3'
+}
+
+for package, version in required.items():
+    try:
+        installed_version = pkg_resources.get_distribution(package).version
+        if installed_version != version:
+            raise ImportError(f"{package} version mismatch. Required {version}, found {installed_version}")
+    except pkg_resources.DistributionNotFound:
+        raise ImportError(f"{package} is not installed")
+
 from flask.sessions import SecureCookieSessionInterface
 
 class CustomSessionInterface(SecureCookieSessionInterface):
