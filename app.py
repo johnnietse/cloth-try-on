@@ -471,6 +471,14 @@ def post_to_instagram():
 #         app.logger.error(f"post_to_instagram failed: {e}")
 #         return jsonify({"error": "Internal server error"}), 500
 
+# @app.route('/privacy')
+# def privacy():
+#     return render_template('privacy.html')
+
+# @app.route('/terms')
+# def terms():
+#     return render_template('terms.html')
+
 @app.route('/privacy')
 def privacy():
     return render_template('privacy.html')
@@ -478,6 +486,17 @@ def privacy():
 @app.route('/terms')
 def terms():
     return render_template('terms.html')
+
+@app.route('/data_deletion')
+def data_deletion():
+    return render_template('data_deletion.html')  # Create this similarly if needed
+
+@app.route('/instagram_deauth', methods=['POST'])
+def instagram_deauth():
+    # Handle Instagram deauthorization callback
+    data = request.get_json()
+    # Implement deauthorization logic
+    return jsonify(status="success"), 200
 
 @app.route('/delete_shirt/<filename>', methods=['DELETE'])
 def delete_shirt(filename):
