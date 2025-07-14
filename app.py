@@ -14,10 +14,19 @@ import logging
 from logging.handlers import RotatingFileHandler
 import shutil
 import secrets
-
-
-# Add this before any other imports
 import pkg_resources
+from flask.sessions import SecureCookieSessionInterface
+
+
+
+# OpenCV compatibility workaround
+np.int = int
+np.float = float
+np.bool = bool
+
+
+
+app = Flask(__name__)
 
 required = {
     'Flask': '2.0.1',
@@ -47,14 +56,7 @@ app.session_interface = CustomSessionInterface()
 
 
 
-# OpenCV compatibility workaround
-np.int = int
-np.float = float
-np.bool = bool
 
-
-
-app = Flask(__name__)
 
 # app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'default_secret_key')
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', os.urandom(24))
@@ -507,6 +509,13 @@ def instagram_auth():
 
 @app.route('/instagram_callback')
 def instagram_callback():
+
+    # Make sure session is writable
+    session.permanent = True
+    
+    # Add detailed logging
+    app.logger.info(f"Instagram callback received. Params: {request.args}")
+    
     # Check for errors first
     if 'error' in request.args:
         error = request.args.get('error')
@@ -777,6 +786,23 @@ def dependency_check():
     return jsonify(status)
 
 
+# if __name__ == '__main__':
+#     debug = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
+#     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=debug)
+
+
 if __name__ == '__main__':
+    # Verify dependencies
+    try:
+        import cv2
+        import cvzone
+        app.logger.info(f"OpenCV version: {cv2.__version__}")
+        app.logger.info(f"CVZone version: {cvzone.__version__}")
+    except ImportError as e:
+        app.logger.error(f"Import error: {e}")
+    
+    # Start the app
     debug = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
-    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=debug)
+    port = int(os.getenv('PORT', 5000))
+    app.logger.info(f"Starting app on port {port} in {'debug' if debug else 'production'} mode")
+    app.run(host='0.0.0.0', port=port, debug=debug)
