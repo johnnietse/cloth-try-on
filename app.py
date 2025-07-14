@@ -389,8 +389,17 @@ def instagram_auth():
 #     return redirect(url_for('index'))
 
 
+
+
 @app.route('/instagram_callback')
 def instagram_callback():
+    app.logger.info(f"Instagram callback received. Params: {request.args}")
+    
+    # Verify state parameter
+    if 'oauth_state' not in session:
+        app.logger.error("OAuth state missing in session")
+        abort(403, description="Session expired")
+        
     # Verify state parameter
     if request.args.get('state') != session.get('oauth_state'):
         abort(403, description="Invalid state parameter")
@@ -585,9 +594,14 @@ def delete_shirt(filename):
         return jsonify({"error": "Internal server error"}), 500
 
 
+# @app.route('/healthz')
+# def health_check():
+#     return jsonify({"status": "healthy"}), 200
+
+
 @app.route('/healthz')
 def health_check():
-    return jsonify({"status": "healthy"}), 200
+    return jsonify({"status": "healthy", "time": datetime.utcnow().isoformat()}), 200
 
 
 if __name__ == '__main__':
