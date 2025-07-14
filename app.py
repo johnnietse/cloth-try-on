@@ -13,6 +13,7 @@ from cvzone.PoseModule import PoseDetector
 import logging
 from logging.handlers import RotatingFileHandler
 import shutil
+import secrets
 
 
 from flask.sessions import SecureCookieSessionInterface
