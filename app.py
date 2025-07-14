@@ -320,11 +320,14 @@ def instagram_callback():
     return redirect(url_for('index'))
 
 
+
+
 @app.route('/post_to_instagram', methods=['POST'])
 def post_to_instagram():
     try:
         data = request.json
         image_url = data.get('image_url')
+        caption = data.get('caption', 'Created with Virtual Try-On #VirtualTryOn #FashionTech')  # Get caption or use default
 
         # Check if user is authenticated
         access_token = session.get('instagram_token')
@@ -337,13 +340,11 @@ def post_to_instagram():
         if not image_url.startswith('/static/processed/'):
             return jsonify({"error": "Invalid image path"}), 400
 
-        image_path = os.path.join(BASE_DIR, image_url[1:])
-
         # Step 1: Create media container
         container_url = f"https://graph.facebook.com/v18.0/{user_id}/media"
         container_params = {
             'image_url': request.host_url + image_url.lstrip('/'),
-            'caption': 'Created with Virtual Try-On #VirtualTryOn #FashionTech',
+            'caption': caption,  # Use user-provided caption
             'access_token': access_token
         }
 
@@ -370,6 +371,58 @@ def post_to_instagram():
     except Exception as e:
         app.logger.error(f"post_to_instagram failed: {e}")
         return jsonify({"error": "Internal server error"}), 500
+
+
+# @app.route('/post_to_instagram', methods=['POST'])
+# def post_to_instagram():
+#     try:
+#         data = request.json
+#         image_url = data.get('image_url')
+
+#         # Check if user is authenticated
+#         access_token = session.get('instagram_token')
+#         user_id = session.get('instagram_user_id')
+
+#         if not access_token or not user_id:
+#             return jsonify({"error": "Not authenticated with Instagram"}), 401
+
+#         # Get absolute path to image
+#         if not image_url.startswith('/static/processed/'):
+#             return jsonify({"error": "Invalid image path"}), 400
+
+#         image_path = os.path.join(BASE_DIR, image_url[1:])
+
+#         # Step 1: Create media container
+#         container_url = f"https://graph.facebook.com/v18.0/{user_id}/media"
+#         container_params = {
+#             'image_url': request.host_url + image_url.lstrip('/'),
+#             'caption': 'Created with Virtual Try-On #VirtualTryOn #FashionTech',
+#             'access_token': access_token
+#         }
+
+#         container_resp = requests.post(container_url, params=container_params)
+#         if container_resp.status_code != 200:
+#             app.logger.error(f"Instagram container error: {container_resp.text}")
+#             return jsonify({"error": "Failed to create media container"}), 500
+
+#         container_id = container_resp.json().get('id')
+
+#         # Step 2: Publish the container
+#         publish_url = f"https://graph.facebook.com/v18.0/{user_id}/media_publish"
+#         publish_params = {
+#             'creation_id': container_id,
+#             'access_token': access_token
+#         }
+
+#         publish_resp = requests.post(publish_url, params=publish_params)
+#         if publish_resp.status_code != 200:
+#             app.logger.error(f"Instagram publish error: {publish_resp.text}")
+#             return jsonify({"error": "Failed to publish media"}), 500
+
+#         return jsonify({"success": True, "post_id": publish_resp.json().get('id')})
+#     except Exception as e:
+#         app.logger.error(f"post_to_instagram failed: {e}")
+#         return jsonify({"error": "Internal server error"}), 500
 
 
 @app.route('/delete_shirt/<filename>', methods=['DELETE'])
