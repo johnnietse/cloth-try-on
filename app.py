@@ -548,17 +548,26 @@ def post_to_instagram():
 #     return render_template('privacy.html')
 
 
+# @app.route('/privacy')
+# def privacy():
+#     # Pass Instagram App ID to the template
+#     return render_template(
+#         'privacy.html',
+#         app_id=os.getenv('INSTAGRAM_APP_ID', '')
+#     )
+
+
 @app.route('/privacy')
 def privacy():
-    # Pass Instagram App ID to the template
     return render_template(
         'privacy.html',
         app_id=os.getenv('INSTAGRAM_APP_ID', '')
-    )
+    ), 200, {'Link': '<https://virtual-try-on-yg9v.onrender.com/privacy>; rel="canonical"'}
 
 @app.route('/terms')
 def terms():
     return render_template('terms.html')
+
 
 @app.route('/data_deletion')
 def data_deletion():
