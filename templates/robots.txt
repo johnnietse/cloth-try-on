@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /uploads
+Disallow: /processed
+Sitemap: https://virtual-try-on-yg9v.onrender.com/sitemap.xml
