@@ -272,54 +272,101 @@ def cohere_chat():
         return jsonify({"error": "Internal server error"}), 500
 
 
+# @app.route('/instagram_auth')
+# def instagram_auth():
+#     # Start Instagram OAuth flow
+#     auth_url = (
+#         f"https://api.instagram.com/oauth/authorize?"
+#         f"client_id={INSTAGRAM_APP_ID}&"
+#         f"redirect_uri={INSTAGRAM_REDIRECT_URI}&"
+#         "scope=user_profile,user_media&"
+#         "response_type=code"
+#     )
+#     return redirect(auth_url)
+
 @app.route('/instagram_auth')
 def instagram_auth():
-    # Start Instagram OAuth flow
+    # Generate a state token to prevent CSRF
+    state = str(uuid.uuid4())
+    session['oauth_state'] = state
+    
     auth_url = (
-        f"https://api.instagram.com/oauth/authorize?"
+        f"https://www.facebook.com/{os.getenv('INSTAGRAM_GRAPH_VERSION', 'v18.0')}/dialog/oauth?"
         f"client_id={INSTAGRAM_APP_ID}&"
         f"redirect_uri={INSTAGRAM_REDIRECT_URI}&"
-        "scope=user_profile,user_media&"
-        "response_type=code"
+        "scope=instagram_content_publish,user_profile&"
+        f"state={state}"
     )
     return redirect(auth_url)
+    
+# @app.route('/instagram_callback')
+# def instagram_callback():
+#     code = request.args.get('code')
+#     if not code:
+#         return jsonify({"error": "Authorization failed"}), 400
+
+#     # Exchange code for access token
+#     token_data = {
+#         'client_id': INSTAGRAM_APP_ID,
+#         'client_secret': INSTAGRAM_APP_SECRET,
+#         'grant_type': 'authorization_code',
+#         'redirect_uri': INSTAGRAM_REDIRECT_URI,
+#         'code': code
+#     }
+
+#     response = requests.post(
+#         'https://api.instagram.com/oauth/access_token',
+#         data=token_data
+#     )
+
+#     if response.status_code != 200:
+#         app.logger.error(f"Instagram token exchange failed: {response.text}")
+#         return jsonify({"error": "Failed to get access token"}), 500
+
+#     token_info = response.json()
+#     access_token = token_info.get('access_token')
+#     user_id = token_info.get('user_id')
+
+#     # Store token in session
+#     session['instagram_token'] = access_token
+#     session['instagram_user_id'] = user_id
+
+#     return redirect(url_for('index'))
 
 
 @app.route('/instagram_callback')
 def instagram_callback():
+    # Verify state parameter
+    if request.args.get('state') != session.get('oauth_state'):
+        abort(403, description="Invalid state parameter")
+    
     code = request.args.get('code')
     if not code:
         return jsonify({"error": "Authorization failed"}), 400
-
+    
     # Exchange code for access token
+    token_url = f"{os.getenv('INSTAGRAM_API_BASE', 'https://graph.facebook.com/')}{os.getenv('INSTAGRAM_GRAPH_VERSION', 'v18.0')}/oauth/access_token"
     token_data = {
         'client_id': INSTAGRAM_APP_ID,
         'client_secret': INSTAGRAM_APP_SECRET,
-        'grant_type': 'authorization_code',
         'redirect_uri': INSTAGRAM_REDIRECT_URI,
         'code': code
     }
-
-    response = requests.post(
-        'https://api.instagram.com/oauth/access_token',
-        data=token_data
-    )
-
+    
+    response = requests.get(token_url, params=token_data)
     if response.status_code != 200:
         app.logger.error(f"Instagram token exchange failed: {response.text}")
         return jsonify({"error": "Failed to get access token"}), 500
-
+    
     token_info = response.json()
     access_token = token_info.get('access_token')
-    user_id = token_info.get('user_id')
-
+    expires_in = token_info.get('expires_in', 5184000)  # Default 60 days
+    
     # Store token in session
     session['instagram_token'] = access_token
-    session['instagram_user_id'] = user_id
-
+    session['token_expiry'] = datetime.now() + timedelta(seconds=expires_in)
+    
     return redirect(url_for('index'))
-
-
 
 
 @app.route('/post_to_instagram', methods=['POST'])
@@ -424,6 +471,13 @@ def post_to_instagram():
 #         app.logger.error(f"post_to_instagram failed: {e}")
 #         return jsonify({"error": "Internal server error"}), 500
 
+@app.route('/privacy')
+def privacy():
+    return render_template('privacy.html')
+
+@app.route('/terms')
+def terms():
+    return render_template('terms.html')
 
 @app.route('/delete_shirt/<filename>', methods=['DELETE'])
 def delete_shirt(filename):
