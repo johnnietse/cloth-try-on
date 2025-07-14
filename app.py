@@ -543,9 +543,18 @@ def post_to_instagram():
 # def terms():
 #     return render_template('terms.html')
 
+# @app.route('/privacy')
+# def privacy():
+#     return render_template('privacy.html')
+
+
 @app.route('/privacy')
 def privacy():
-    return render_template('privacy.html')
+    # Pass Instagram App ID to the template
+    return render_template(
+        'privacy.html',
+        app_id=os.getenv('INSTAGRAM_APP_ID', '')
+    )
 
 @app.route('/terms')
 def terms():
