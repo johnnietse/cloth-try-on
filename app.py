@@ -573,6 +573,14 @@ def terms():
 def data_deletion():
     return render_template('data_deletion.html')  # Create this similarly if needed
 
+@app.route('/robots.txt')
+def robots():
+    return send_from_directory(app.template_folder, 'robots.txt')
+
+@app.route('/sitemap.xml')
+def sitemap():
+    return send_from_directory(app.template_folder, 'sitemap.xml')
+    
 @app.route('/instagram_deauth', methods=['POST'])
 def instagram_deauth():
     # Handle Instagram deauthorization callback
