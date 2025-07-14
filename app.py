@@ -553,6 +553,13 @@ def instagram_deauth():
     # Implement deauthorization logic
     return jsonify(status="success"), 200
 
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    app.logger.error(f"Internal Server Error: {e}")
+    return render_template('500.html'), 500
+    
+
 @app.route('/delete_shirt/<filename>', methods=['DELETE'])
 def delete_shirt(filename):
     try:
