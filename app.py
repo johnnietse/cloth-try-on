@@ -15,6 +15,19 @@ from logging.handlers import RotatingFileHandler
 import shutil
 
 
+from flask.sessions import SecureCookieSessionInterface
+
+class CustomSessionInterface(SecureCookieSessionInterface):
+    """Prevent creating session from API requests"""
+    def save_session(self, *args, **kwargs):
+        if request.path.startswith('/instagram_callback'):
+            return
+        return super(CustomSessionInterface, self).save_session(*args, **kwargs)
+
+app.session_interface = CustomSessionInterface()
+
+
+
 # OpenCV compatibility workaround
 np.int = int
 np.float = float
@@ -302,19 +315,55 @@ def cohere_chat():
 #     return redirect(auth_url)
 
 
-# Updated Instagram auth routes
+# # Updated Instagram auth routes
+# @app.route('/instagram_auth')
+# def instagram_auth():
+#     # Generate state token for CSRF protection
+#     state = str(uuid.uuid4())
+#     session['oauth_state'] = state
+    
+#     # Use Facebook's OAuth dialog
+#     auth_url = (
+#         f"https://www.facebook.com/v18.0/dialog/oauth?"
+#         f"client_id={INSTAGRAM_APP_ID}&"
+#         f"redirect_uri={INSTAGRAM_REDIRECT_URI}&"
+#         "scope=instagram_content_publish,user_profile&"
+#         f"state={state}"
+#     )
+#     return redirect(auth_url)
+
+
+# # Update the scope in your instagram_auth route:
+# @app.route('/instagram_auth')
+# def instagram_auth():
+
+#     # Generate state token for CSRF protection
+#     state = str(uuid.uuid4())
+#     session['oauth_state'] = state
+    
+#     auth_url = (
+#         f"https://www.facebook.com/v18.0/dialog/oauth?"
+#         f"client_id={INSTAGRAM_APP_ID}&"
+#         f"redirect_uri={INSTAGRAM_REDIRECT_URI}&"
+#         "scope=instagram_graph_user_profile,instagram_graph_user_media,instagram_content_publish&"  # Updated scopes
+#         f"state={state}"
+#     )
+#     return redirect(auth_url)
+
+
+
 @app.route('/instagram_auth')
 def instagram_auth():
-    # Generate state token for CSRF protection
-    state = str(uuid.uuid4())
+    # Generate state token
+    state = secrets.token_urlsafe(16)
     session['oauth_state'] = state
-    
-    # Use Facebook's OAuth dialog
+    session.modified = True  # Ensure session is saved
+
     auth_url = (
         f"https://www.facebook.com/v18.0/dialog/oauth?"
         f"client_id={INSTAGRAM_APP_ID}&"
         f"redirect_uri={INSTAGRAM_REDIRECT_URI}&"
-        "scope=instagram_content_publish,user_profile&"
+        "scope=instagram_graph_user_profile,instagram_graph_user_media,instagram_content_publish&"
         f"state={state}"
     )
     return redirect(auth_url)
@@ -391,44 +440,96 @@ def instagram_auth():
 
 
 
+# @app.route('/instagram_callback')
+# def instagram_callback():
+#     # Add this to prevent session reset
+#     session.permanent = True
+    
+#     app.logger.info(f"Instagram callback received. Params: {request.args}")
+    
+#     # Verify state parameter
+#     if 'oauth_state' not in session:
+#         app.logger.error("OAuth state missing in session")
+#         abort(403, description="Session expired. Please try again.")
+        
+#     # Verify state parameter
+#     if request.args.get('state') != session.get('oauth_state'):
+#         abort(403, description="Invalid state parameter")
+    
+#     code = request.args.get('code')
+#     if not code:
+#         return jsonify({"error": "Authorization failed"}), 400
+    
+#     # Exchange code for access token
+#     token_url = "https://graph.facebook.com/v18.0/oauth/access_token"
+#     token_data = {
+#         'client_id': INSTAGRAM_APP_ID,
+#         'client_secret': INSTAGRAM_APP_SECRET,
+#         'redirect_uri': INSTAGRAM_REDIRECT_URI,
+#         'code': code
+#     }
+    
+#     response = requests.get(token_url, params=token_data)
+#     if response.status_code != 200:
+#         app.logger.error(f"Instagram token exchange failed: {response.text}")
+#         return jsonify({"error": "Failed to get access token"}), 500
+    
+#     token_info = response.json()
+#     access_token = token_info.get('access_token')
+#     expires_in = token_info.get('expires_in', 5184000)  # Default 60 days
+    
+#     # Store token in session
+#     session['instagram_token'] = access_token
+#     session['token_expiry'] = (datetime.now() + timedelta(seconds=expires_in)).isoformat()
+    
+#     return redirect(url_for('index'))
+
+
+
 @app.route('/instagram_callback')
 def instagram_callback():
-    app.logger.info(f"Instagram callback received. Params: {request.args}")
-    
+    # Check for errors first
+    if 'error' in request.args:
+        error = request.args.get('error')
+        error_reason = request.args.get('error_reason', '')
+        error_description = request.args.get('error_description', '')
+        app.logger.error(f"OAuth error: {error} - {error_reason} - {error_description}")
+        return render_template('oauth_error.html', error=error_description), 400
+
     # Verify state parameter
     if 'oauth_state' not in session:
         app.logger.error("OAuth state missing in session")
-        abort(403, description="Session expired")
+        return render_template('oauth_error.html', error="Session expired. Please try again."), 403
         
-    # Verify state parameter
-    if request.args.get('state') != session.get('oauth_state'):
-        abort(403, description="Invalid state parameter")
-    
+    if request.args.get('state') != session['oauth_state']:
+        app.logger.error(f"State mismatch: {request.args.get('state')} vs {session['oauth_state']}")
+        return render_template('oauth_error.html', error="Security validation failed"), 403
+
+    # Exchange code for token
     code = request.args.get('code')
     if not code:
-        return jsonify({"error": "Authorization failed"}), 400
-    
-    # Exchange code for access token
+        return render_template('oauth_error.html', error="Authorization code missing"), 400
+
     token_url = "https://graph.facebook.com/v18.0/oauth/access_token"
-    token_data = {
+    token_params = {
         'client_id': INSTAGRAM_APP_ID,
         'client_secret': INSTAGRAM_APP_SECRET,
         'redirect_uri': INSTAGRAM_REDIRECT_URI,
         'code': code
     }
     
-    response = requests.get(token_url, params=token_data)
-    if response.status_code != 200:
-        app.logger.error(f"Instagram token exchange failed: {response.text}")
-        return jsonify({"error": "Failed to get access token"}), 500
-    
-    token_info = response.json()
-    access_token = token_info.get('access_token')
-    expires_in = token_info.get('expires_in', 5184000)  # Default 60 days
-    
-    # Store token in session
-    session['instagram_token'] = access_token
-    session['token_expiry'] = (datetime.now() + timedelta(seconds=expires_in)).isoformat()
+    try:
+        response = requests.get(token_url, params=token_params)
+        response.raise_for_status()
+        token_data = response.json()
+    except Exception as e:
+        app.logger.error(f"Token exchange failed: {str(e)}")
+        return render_template('oauth_error.html', error="Token exchange failed"), 500
+
+    # Store tokens in session
+    session['instagram_token'] = token_data.get('access_token')
+    session['instagram_user_id'] = token_data.get('user_id', '')
+    session.modified = True
     
     return redirect(url_for('index'))
 
