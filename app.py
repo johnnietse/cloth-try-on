@@ -24,6 +24,7 @@ np.bool = bool
 app = Flask(__name__)
 
 # app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'default_secret_key')
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', os.urandom(24))
 
 # Configure paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
