@@ -750,6 +750,33 @@ def health_check():
     return jsonify({"status": "healthy", "time": datetime.utcnow().isoformat()}), 200
 
 
+@app.route('/dependency_check')
+def dependency_check():
+    dependencies = {
+        'Flask': '2.0.1',
+        'opencv-python-headless': '4.5.4.60',
+        'numpy': '1.21.6',
+        'protobuf': '3.20.3',
+        'cvzone': '1.5.6'
+    }
+    
+    status = {}
+    for package, expected in dependencies.items():
+        try:
+            actual = pkg_resources.get_distribution(package).version
+            status[package] = {
+                'expected': expected,
+                'actual': actual,
+                'match': actual == expected
+            }
+        except Exception as e:
+            status[package] = {
+                'error': str(e)
+            }
+    
+    return jsonify(status)
+
+
 if __name__ == '__main__':
     debug = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=debug)
