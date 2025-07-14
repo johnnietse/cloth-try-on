@@ -10,3 +10,5 @@ pip install --no-deps -r requirements.txt
 
 # Now install just the required dependencies
 pip install absl-py attrs flatbuffers matplotlib sounddevice
+
+pip freeze
