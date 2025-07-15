@@ -3,31 +3,25 @@ import cv2
 import cvzone
 import numpy as np
 import requests
-import base64
 import json
 import uuid
 from datetime import datetime
-from datetime import timedelta  # Add timedelta to imports
-from flask import Flask, request, render_template, send_from_directory, jsonify, redirect, url_for, abort, session
+from flask import Flask, request, render_template, send_from_directory, jsonify, redirect, url_for
 from cvzone.PoseModule import PoseDetector
 import logging
 from logging.handlers import RotatingFileHandler
 import shutil
-import secrets
 import pkg_resources
 from flask.sessions import SecureCookieSessionInterface
-
-
 
 # OpenCV compatibility workaround
 np.int = int
 np.float = float
 np.bool = bool
 
-
-
 app = Flask(__name__)
 
+# Dependency version check
 required = {
     'Flask': '2.0.1',
     'opencv-python-headless': '4.5.4.60',
@@ -43,22 +37,14 @@ for package, version in required.items():
     except pkg_resources.DistributionNotFound:
         raise ImportError(f"{package} is not installed")
 
-from flask.sessions import SecureCookieSessionInterface
-
+# Custom session interface
 class CustomSessionInterface(SecureCookieSessionInterface):
-    """Prevent creating session from API requests"""
     def save_session(self, *args, **kwargs):
-        if request.path.startswith('/instagram_callback'):
-            return
         return super(CustomSessionInterface, self).save_session(*args, **kwargs)
 
 app.session_interface = CustomSessionInterface()
 
-
-
-
-
-# app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'default_secret_key')
+# Set secret key
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', os.urandom(24))
 
 # Configure paths
@@ -84,11 +70,8 @@ if not app.debug:
     app.logger.addHandler(handler)
     app.logger.setLevel(logging.INFO)
 
-# API Keys (Set these in your environment variables)
+# API Keys
 COHERE_API_KEY = os.environ.get('COHERE_API_KEY')
-INSTAGRAM_APP_ID = os.environ.get('INSTAGRAM_APP_ID')
-INSTAGRAM_APP_SECRET = os.environ.get('INSTAGRAM_APP_SECRET')
-INSTAGRAM_REDIRECT_URI = os.environ.get('INSTAGRAM_REDIRECT_URI', 'http://localhost:5000/instagram_callback')
 
 def get_shirt_list():
     try:
@@ -97,7 +80,6 @@ def get_shirt_list():
     except Exception as e:
         app.logger.error(f"get_shirt_list failed: {e}")
         return []
-
 
 def overlay_transparent(background, overlay, alpha_blend=0.7):
     try:
@@ -119,8 +101,6 @@ def overlay_transparent(background, overlay, alpha_blend=0.7):
     except Exception as e:
         app.logger.error(f"overlay_transparent failed: {e}")
         return background
-
-
 
 def process_image(user_image_path, shirt_index):
     detector = PoseDetector()
@@ -155,14 +135,6 @@ def process_image(user_image_path, shirt_index):
         scale = 1.5
         shoulder_width = abs(left_shoulder[0] - right_shoulder[0])*scale
         hip_height = abs(left_hip[1] - left_shoulder[1])*scale
-
-
-
-        # # Aspect Ratio Preservation
-        # shirt_aspect = imgShirt.shape[1] / imgShirt.shape[0]
-        # calculated_aspect = shoulder_width / hip_height
-        # if abs(calculated_aspect - shirt_aspect) > shirt_aspect * 0.3:
-        #     hip_height = shoulder_width / shirt_aspect
 
         # Create synthetic torso points
         left_shoulder = [center_x - shoulder_width / 2, center_y - hip_height / 2]
@@ -204,13 +176,10 @@ def process_image(user_image_path, shirt_index):
     else:
         raise ValueError("Pose detection failed - could not find body landmarks")
 
-
-        
 @app.route('/')
 def index():
     shirts = get_shirt_list()
     return render_template('index.html', shirts=shirts)
-
 
 @app.route('/upload_shirt', methods=['POST'])
 def upload_shirt():
@@ -228,7 +197,6 @@ def upload_shirt():
     except Exception as e:
         app.logger.error(f"upload_shirt failed: {e}")
         return jsonify({"error": "Internal server error"}), 500
-
 
 @app.route('/upload', methods=['POST'])
 def upload_image():
@@ -266,8 +234,6 @@ def upload_image():
         app.logger.error(f"upload_image failed: {e}")
         return jsonify({"error": str(e)}), 500
 
-
-# New routes for Cohere, DALLE-3 and Instagram
 @app.route('/cohere_chat', methods=['POST'])
 def cohere_chat():
     try:
@@ -307,401 +273,20 @@ def cohere_chat():
         app.logger.error(f"cohere_chat failed: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-
-# @app.route('/instagram_auth')
-# def instagram_auth():
-#     # Start Instagram OAuth flow
-#     auth_url = (
-#         f"https://api.instagram.com/oauth/authorize?"
-#         f"client_id={INSTAGRAM_APP_ID}&"
-#         f"redirect_uri={INSTAGRAM_REDIRECT_URI}&"
-#         "scope=user_profile,user_media&"
-#         "response_type=code"
-#     )
-#     return redirect(auth_url)
-
-# @app.route('/instagram_auth')
-# def instagram_auth():
-#     # Generate a state token to prevent CSRF
-#     state = str(uuid.uuid4())
-#     session['oauth_state'] = state
-    
-#     auth_url = (
-#         f"https://www.facebook.com/{os.getenv('INSTAGRAM_GRAPH_VERSION', 'v18.0')}/dialog/oauth?"
-#         f"client_id={INSTAGRAM_APP_ID}&"
-#         f"redirect_uri={INSTAGRAM_REDIRECT_URI}&"
-#         "scope=instagram_content_publish,user_profile&"
-#         f"state={state}"
-#     )
-#     return redirect(auth_url)
-
-
-# # Updated Instagram auth routes
-# @app.route('/instagram_auth')
-# def instagram_auth():
-#     # Generate state token for CSRF protection
-#     state = str(uuid.uuid4())
-#     session['oauth_state'] = state
-    
-#     # Use Facebook's OAuth dialog
-#     auth_url = (
-#         f"https://www.facebook.com/v18.0/dialog/oauth?"
-#         f"client_id={INSTAGRAM_APP_ID}&"
-#         f"redirect_uri={INSTAGRAM_REDIRECT_URI}&"
-#         "scope=instagram_content_publish,user_profile&"
-#         f"state={state}"
-#     )
-#     return redirect(auth_url)
-
-
-# # Update the scope in your instagram_auth route:
-# @app.route('/instagram_auth')
-# def instagram_auth():
-
-#     # Generate state token for CSRF protection
-#     state = str(uuid.uuid4())
-#     session['oauth_state'] = state
-    
-#     auth_url = (
-#         f"https://www.facebook.com/v18.0/dialog/oauth?"
-#         f"client_id={INSTAGRAM_APP_ID}&"
-#         f"redirect_uri={INSTAGRAM_REDIRECT_URI}&"
-#         "scope=instagram_graph_user_profile,instagram_graph_user_media,instagram_content_publish&"  # Updated scopes
-#         f"state={state}"
-#     )
-#     return redirect(auth_url)
-
-
-
-@app.route('/instagram_auth')
-def instagram_auth():
-    # Generate state token
-    state = secrets.token_urlsafe(16)
-    session['oauth_state'] = state
-    session.modified = True  # Ensure session is saved
-
-    auth_url = (
-        f"https://www.facebook.com/v18.0/dialog/oauth?"
-        f"client_id={INSTAGRAM_APP_ID}&"
-        f"redirect_uri={INSTAGRAM_REDIRECT_URI}&"
-        "scope=instagram_graph_user_profile,instagram_graph_user_media,instagram_content_publish&"
-        f"state={state}"
-    )
-    return redirect(auth_url)
-    
-# @app.route('/instagram_callback')
-# def instagram_callback():
-#     code = request.args.get('code')
-#     if not code:
-#         return jsonify({"error": "Authorization failed"}), 400
-
-#     # Exchange code for access token
-#     token_data = {
-#         'client_id': INSTAGRAM_APP_ID,
-#         'client_secret': INSTAGRAM_APP_SECRET,
-#         'grant_type': 'authorization_code',
-#         'redirect_uri': INSTAGRAM_REDIRECT_URI,
-#         'code': code
-#     }
-
-#     response = requests.post(
-#         'https://api.instagram.com/oauth/access_token',
-#         data=token_data
-#     )
-
-#     if response.status_code != 200:
-#         app.logger.error(f"Instagram token exchange failed: {response.text}")
-#         return jsonify({"error": "Failed to get access token"}), 500
-
-#     token_info = response.json()
-#     access_token = token_info.get('access_token')
-#     user_id = token_info.get('user_id')
-
-#     # Store token in session
-#     session['instagram_token'] = access_token
-#     session['instagram_user_id'] = user_id
-
-#     return redirect(url_for('index'))
-
-
-# @app.route('/instagram_callback')
-# def instagram_callback():
-#     # Verify state parameter
-#     if request.args.get('state') != session.get('oauth_state'):
-#         abort(403, description="Invalid state parameter")
-    
-#     code = request.args.get('code')
-#     if not code:
-#         return jsonify({"error": "Authorization failed"}), 400
-    
-#     # Exchange code for access token
-#     token_url = f"{os.getenv('INSTAGRAM_API_BASE', 'https://graph.facebook.com/')}{os.getenv('INSTAGRAM_GRAPH_VERSION', 'v18.0')}/oauth/access_token"
-#     token_data = {
-#         'client_id': INSTAGRAM_APP_ID,
-#         'client_secret': INSTAGRAM_APP_SECRET,
-#         'redirect_uri': INSTAGRAM_REDIRECT_URI,
-#         'code': code
-#     }
-    
-#     response = requests.get(token_url, params=token_data)
-#     if response.status_code != 200:
-#         app.logger.error(f"Instagram token exchange failed: {response.text}")
-#         return jsonify({"error": "Failed to get access token"}), 500
-    
-#     token_info = response.json()
-#     access_token = token_info.get('access_token')
-#     expires_in = token_info.get('expires_in', 5184000)  # Default 60 days
-    
-#     # Store token in session
-#     session['instagram_token'] = access_token
-#     session['token_expiry'] = datetime.now() + timedelta(seconds=expires_in)
-    
-#     return redirect(url_for('index'))
-
-
-
-
-# @app.route('/instagram_callback')
-# def instagram_callback():
-#     # Add this to prevent session reset
-#     session.permanent = True
-    
-#     app.logger.info(f"Instagram callback received. Params: {request.args}")
-    
-#     # Verify state parameter
-#     if 'oauth_state' not in session:
-#         app.logger.error("OAuth state missing in session")
-#         abort(403, description="Session expired. Please try again.")
-        
-#     # Verify state parameter
-#     if request.args.get('state') != session.get('oauth_state'):
-#         abort(403, description="Invalid state parameter")
-    
-#     code = request.args.get('code')
-#     if not code:
-#         return jsonify({"error": "Authorization failed"}), 400
-    
-#     # Exchange code for access token
-#     token_url = "https://graph.facebook.com/v18.0/oauth/access_token"
-#     token_data = {
-#         'client_id': INSTAGRAM_APP_ID,
-#         'client_secret': INSTAGRAM_APP_SECRET,
-#         'redirect_uri': INSTAGRAM_REDIRECT_URI,
-#         'code': code
-#     }
-    
-#     response = requests.get(token_url, params=token_data)
-#     if response.status_code != 200:
-#         app.logger.error(f"Instagram token exchange failed: {response.text}")
-#         return jsonify({"error": "Failed to get access token"}), 500
-    
-#     token_info = response.json()
-#     access_token = token_info.get('access_token')
-#     expires_in = token_info.get('expires_in', 5184000)  # Default 60 days
-    
-#     # Store token in session
-#     session['instagram_token'] = access_token
-#     session['token_expiry'] = (datetime.now() + timedelta(seconds=expires_in)).isoformat()
-    
-#     return redirect(url_for('index'))
-
-
-
-@app.route('/instagram_callback')
-def instagram_callback():
-
-    # Make sure session is writable
-    session.permanent = True
-    
-    # Add detailed logging
-    app.logger.info(f"Instagram callback received. Params: {request.args}")
-    
-    # Check for errors first
-    if 'error' in request.args:
-        error = request.args.get('error')
-        error_reason = request.args.get('error_reason', '')
-        error_description = request.args.get('error_description', '')
-        app.logger.error(f"OAuth error: {error} - {error_reason} - {error_description}")
-        return render_template('oauth_error.html', error=error_description), 400
-
-    # Verify state parameter
-    if 'oauth_state' not in session:
-        app.logger.error("OAuth state missing in session")
-        return render_template('oauth_error.html', error="Session expired. Please try again."), 403
-        
-    if request.args.get('state') != session['oauth_state']:
-        app.logger.error(f"State mismatch: {request.args.get('state')} vs {session['oauth_state']}")
-        return render_template('oauth_error.html', error="Security validation failed"), 403
-
-    # Exchange code for token
-    code = request.args.get('code')
-    if not code:
-        return render_template('oauth_error.html', error="Authorization code missing"), 400
-
-    token_url = "https://graph.facebook.com/v18.0/oauth/access_token"
-    token_params = {
-        'client_id': INSTAGRAM_APP_ID,
-        'client_secret': INSTAGRAM_APP_SECRET,
-        'redirect_uri': INSTAGRAM_REDIRECT_URI,
-        'code': code
-    }
-    
-    try:
-        response = requests.get(token_url, params=token_params)
-        response.raise_for_status()
-        token_data = response.json()
-    except Exception as e:
-        app.logger.error(f"Token exchange failed: {str(e)}")
-        return render_template('oauth_error.html', error="Token exchange failed"), 500
-
-    # Store tokens in session
-    session['instagram_token'] = token_data.get('access_token')
-    session['instagram_user_id'] = token_data.get('user_id', '')
-    session.modified = True
-    
-    return redirect(url_for('index'))
-
-
-@app.route('/post_to_instagram', methods=['POST'])
-def post_to_instagram():
-    try:
-        data = request.json
-        image_url = data.get('image_url')
-        caption = data.get('caption', 'Created with Virtual Try-On #VirtualTryOn #FashionTech')  # Get caption or use default
-
-        # Check if user is authenticated
-        access_token = session.get('instagram_token')
-        user_id = session.get('instagram_user_id')
-
-        if not access_token or not user_id:
-            return jsonify({"error": "Not authenticated with Instagram"}), 401
-
-        # Get absolute path to image
-        if not image_url.startswith('/static/processed/'):
-            return jsonify({"error": "Invalid image path"}), 400
-
-        # Step 1: Create media container
-        container_url = f"https://graph.facebook.com/v18.0/{user_id}/media"
-        container_params = {
-            'image_url': request.host_url + image_url.lstrip('/'),
-            'caption': caption,  # Use user-provided caption
-            'access_token': access_token
-        }
-
-        container_resp = requests.post(container_url, params=container_params)
-        if container_resp.status_code != 200:
-            app.logger.error(f"Instagram container error: {container_resp.text}")
-            return jsonify({"error": "Failed to create media container"}), 500
-
-        container_id = container_resp.json().get('id')
-
-        # Step 2: Publish the container
-        publish_url = f"https://graph.facebook.com/v18.0/{user_id}/media_publish"
-        publish_params = {
-            'creation_id': container_id,
-            'access_token': access_token
-        }
-
-        publish_resp = requests.post(publish_url, params=publish_params)
-        if publish_resp.status_code != 200:
-            app.logger.error(f"Instagram publish error: {publish_resp.text}")
-            return jsonify({"error": "Failed to publish media"}), 500
-
-        return jsonify({"success": True, "post_id": publish_resp.json().get('id')})
-    except Exception as e:
-        app.logger.error(f"post_to_instagram failed: {e}")
-        return jsonify({"error": "Internal server error"}), 500
-
-
-# @app.route('/post_to_instagram', methods=['POST'])
-# def post_to_instagram():
-#     try:
-#         data = request.json
-#         image_url = data.get('image_url')
-
-#         # Check if user is authenticated
-#         access_token = session.get('instagram_token')
-#         user_id = session.get('instagram_user_id')
-
-#         if not access_token or not user_id:
-#             return jsonify({"error": "Not authenticated with Instagram"}), 401
-
-#         # Get absolute path to image
-#         if not image_url.startswith('/static/processed/'):
-#             return jsonify({"error": "Invalid image path"}), 400
-
-#         image_path = os.path.join(BASE_DIR, image_url[1:])
-
-#         # Step 1: Create media container
-#         container_url = f"https://graph.facebook.com/v18.0/{user_id}/media"
-#         container_params = {
-#             'image_url': request.host_url + image_url.lstrip('/'),
-#             'caption': 'Created with Virtual Try-On #VirtualTryOn #FashionTech',
-#             'access_token': access_token
-#         }
-
-#         container_resp = requests.post(container_url, params=container_params)
-#         if container_resp.status_code != 200:
-#             app.logger.error(f"Instagram container error: {container_resp.text}")
-#             return jsonify({"error": "Failed to create media container"}), 500
-
-#         container_id = container_resp.json().get('id')
-
-#         # Step 2: Publish the container
-#         publish_url = f"https://graph.facebook.com/v18.0/{user_id}/media_publish"
-#         publish_params = {
-#             'creation_id': container_id,
-#             'access_token': access_token
-#         }
-
-#         publish_resp = requests.post(publish_url, params=publish_params)
-#         if publish_resp.status_code != 200:
-#             app.logger.error(f"Instagram publish error: {publish_resp.text}")
-#             return jsonify({"error": "Failed to publish media"}), 500
-
-#         return jsonify({"success": True, "post_id": publish_resp.json().get('id')})
-#     except Exception as e:
-#         app.logger.error(f"post_to_instagram failed: {e}")
-#         return jsonify({"error": "Internal server error"}), 500
-
-# @app.route('/privacy')
-# def privacy():
-#     return render_template('privacy.html')
-
-# @app.route('/terms')
-# def terms():
-#     return render_template('terms.html')
-
-# @app.route('/privacy')
-# def privacy():
-#     return render_template('privacy.html')
-
-
-# @app.route('/privacy')
-# def privacy():
-#     # Pass Instagram App ID to the template
-#     return render_template(
-#         'privacy.html',
-#         app_id=os.getenv('INSTAGRAM_APP_ID', '')
-#     )
-
-
+# Privacy and legal pages
 @app.route('/privacy')
 def privacy():
-    return render_template(
-        'privacy.html',
-        app_id=os.getenv('INSTAGRAM_APP_ID', '')
-    ), 200, {'Link': '<https://virtual-try-on-yg9v.onrender.com/privacy>; rel="canonical"'}
+    return render_template('privacy.html'), 200, {'Link': '<https://virtual-try-on-yg9v.onrender.com/privacy>; rel="canonical"'}
 
 @app.route('/terms')
 def terms():
     return render_template('terms.html')
 
-
 @app.route('/data_deletion')
 def data_deletion():
-    return render_template('data_deletion.html')  # Create this similarly if needed
+    return render_template('data_deletion.html')
 
+# Static files
 @app.route('/robots.txt')
 def robots():
     return send_from_directory(app.template_folder, 'robots.txt')
@@ -709,20 +294,6 @@ def robots():
 @app.route('/sitemap.xml')
 def sitemap():
     return send_from_directory(app.template_folder, 'sitemap.xml')
-    
-@app.route('/instagram_deauth', methods=['POST'])
-def instagram_deauth():
-    # Handle Instagram deauthorization callback
-    data = request.get_json()
-    # Implement deauthorization logic
-    return jsonify(status="success"), 200
-
-
-@app.errorhandler(500)
-def internal_server_error(e):
-    app.logger.error(f"Internal Server Error: {e}")
-    return render_template('500.html'), 500
-    
 
 @app.route('/delete_shirt/<filename>', methods=['DELETE'])
 def delete_shirt(filename):
@@ -748,16 +319,10 @@ def delete_shirt(filename):
         app.logger.error(f"delete_shirt failed: {e}")
         return jsonify({"error": "Internal server error"}), 500
 
-
-# @app.route('/healthz')
-# def health_check():
-#     return jsonify({"status": "healthy"}), 200
-
-
+# Health checks
 @app.route('/healthz')
 def health_check():
     return jsonify({"status": "healthy", "time": datetime.utcnow().isoformat()}), 200
-
 
 @app.route('/dependency_check')
 def dependency_check():
@@ -785,12 +350,13 @@ def dependency_check():
     
     return jsonify(status)
 
+# Error handling
+@app.errorhandler(500)
+def internal_server_error(e):
+    app.logger.error(f"Internal Server Error: {e}")
+    return render_template('500.html'), 500
 
-# if __name__ == '__main__':
-#     debug = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
-#     app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=debug)
-
-
+# Main entry point
 if __name__ == '__main__':
     # Verify dependencies
     try:
