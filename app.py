@@ -6,13 +6,26 @@ import requests
 import json
 import uuid
 from datetime import datetime
-from flask import Flask, request, render_template, send_from_directory, jsonify, redirect, url_for
+# from flask import Flask, request, render_template, send_from_directory, jsonify, redirect, url_for
 from cvzone.PoseModule import PoseDetector
 import logging
 from logging.handlers import RotatingFileHandler
 import shutil
 import pkg_resources
 from flask.sessions import SecureCookieSessionInterface
+
+# Update the Flask imports at the top
+from flask import (
+    Flask, 
+    request, 
+    render_template, 
+    send_from_directory, 
+    jsonify, 
+    redirect, 
+    url_for, 
+    send_file,  # Add this
+    abort       # Add this
+)
 
 # OpenCV compatibility workaround
 np.int = int
@@ -355,6 +368,25 @@ def dependency_check():
 def internal_server_error(e):
     app.logger.error(f"Internal Server Error: {e}")
     return render_template('500.html'), 500
+
+
+@app.route('/get_processed_image/<filename>')
+def get_processed_image(filename):
+    try:
+        # Secure the filename
+        if '..' in filename or filename.startswith('/'):
+            abort(400, "Invalid filename")
+        
+        image_path = os.path.join(app.config['PROCESSED_FOLDER'], filename)
+        
+        if not os.path.exists(image_path):
+            abort(404, "Image not found")
+        
+        return send_file(image_path, mimetype='image/jpeg')
+    
+    except Exception as e:
+        app.logger.error(f"Error serving processed image: {e}")
+        abort(500, "Internal server error")
 
 # Main entry point
 if __name__ == '__main__':
