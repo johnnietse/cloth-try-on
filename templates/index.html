@@ -636,6 +636,27 @@
             margin-top: 15px;
             display: block;
         }
+
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            color: var(--text-light); /* Added text color control */
+        }
+        
+        .user-message {
+            background: rgba(124, 77, 255, 0.15);
+            text-align: right;
+        }
+        
+        .bot-message {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        /* Ensure proper colors in light mode */
+        body.light .chat-message {
+            color: var(--text-dark);
+        }
         
     </style>
 </head>
