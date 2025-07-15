@@ -6,14 +6,13 @@ import requests
 import json
 import uuid
 from datetime import datetime
-from flask import Flask, request, render_template, send_from_directory, jsonify, redirect, url_for, send_file, abort
+from flask import Flask, request, render_template, send_from_directory, jsonify, redirect, url_for
 from cvzone.PoseModule import PoseDetector
 import logging
 from logging.handlers import RotatingFileHandler
 import shutil
 import pkg_resources
 from flask.sessions import SecureCookieSessionInterface
-
 
 # OpenCV compatibility workaround
 np.int = int
@@ -319,50 +318,6 @@ def delete_shirt(filename):
     except Exception as e:
         app.logger.error(f"delete_shirt failed: {e}")
         return jsonify({"error": "Internal server error"}), 500
-
-
-# @app.route('/get_processed_image/<filename>')
-# def get_processed_image(filename):
-#     try:
-#         # Secure filename input
-#         if '..' in filename or '/' in filename:
-#             abort(404)
-        
-#         image_path = os.path.join(app.config['PROCESSED_FOLDER'], filename)
-        
-#         if not os.path.exists(image_path):
-#             abort(404)
-        
-#         # Set proper headers for image sharing
-#         response = send_file(image_path, mimetype='image/jpeg')
-#         response.headers['Access-Control-Allow-Origin'] = '*'
-#         return response
-#     except Exception as e:
-#         app.logger.error(f"Error serving processed image: {e}")
-#         abort(500)
-
-
-
-@app.route('/get_processed_image/<filename>')
-def get_processed_image(filename):
-    try:
-        # Secure filename input
-        if '..' in filename or '/' in filename:
-            abort(404)
-        
-        image_path = os.path.join(app.config['PROCESSED_FOLDER'], filename)
-        
-        if not os.path.exists(image_path):
-            abort(404)
-        
-        # Set proper headers for image sharing
-        response = send_file(image_path, mimetype='image/jpeg')
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        return response
-    except Exception as e:
-        app.logger.error(f"Error serving processed image: {e}")
-        abort(500)
-
 
 # Health checks
 @app.route('/healthz')
