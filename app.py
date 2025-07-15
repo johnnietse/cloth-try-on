@@ -356,6 +356,30 @@ def internal_server_error(e):
     app.logger.error(f"Internal Server Error: {e}")
     return render_template('500.html'), 500
 
+
+
+@app.route('/get_processed_image/<filename>')
+def get_processed_image(filename):
+    try:
+        # Secure filename input
+        if '..' in filename or '/' in filename:
+            abort(404)
+        
+        image_path = os.path.join(app.config['PROCESSED_FOLDER'], filename)
+        
+        if not os.path.exists(image_path):
+            abort(404)
+        
+        # Set proper headers for image sharing
+        response = send_file(image_path, mimetype='image/jpeg')
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        return response
+    except Exception as e:
+        app.logger.error(f"Error serving processed image: {e}")
+        abort(500)
+
+
+
 # Main entry point
 if __name__ == '__main__':
     # Verify dependencies
