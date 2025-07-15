@@ -658,6 +658,32 @@
             color: var(--text-dark);
         }
         
+        /* Fix input placeholder visibility */
+        #chatInput::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        body.light #chatInput::placeholder {
+            color: rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Also fix the input text color */
+        #chatInput {
+            color: var(--text-light);
+        }
+        
+        body.light #chatInput {
+            color: var(--text-dark);
+        }
+
+
+
+
+
+
+
+        
+        
     </style>
 </head>
 <body class="dark">
