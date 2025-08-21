@@ -318,7 +318,7 @@ Both repositories share the same core technology, but the video version includes
 - **Real-time Interaction**: Instant responses to style-related queries
 
 4. **Social Sharing Features**
-- **Instagram Integration**: Direct sharing to Instagram with automatic caption generation
+- **Instagram Integration**: Direct sharing to Instagram with automatic caption generation through interacting with the built-in chatbot (for this step, we will use ChatGPT OpenAI for prompt generation in order to ask the built-in chatbot specific questions.)
 - **Download Options**: Enhanced download functionality with proper file naming
 - **Sharing Guide**: Fallback instructions for when direct sharing isn't available
 
@@ -338,10 +338,10 @@ Both repositories share the same core technology, but the video version includes
 #### Environment Variables Added:
 - `COHERE_API_KEY`: For AI style assistant functionality
 - `FLASK_SECRET_KEY`: For secure session management
-- Instagram API variables (for future expansion)
+- Instagram API variables (for future expansion. Meanwhile, I attempted to integrate the Instagram Graph API for direct, one-click automatic posting, but with the most recent update, Meta now requires official business registration for this feature to work, meaning it’s no longer feasible for me to use.)
 
 #### Build Process Improvements:
-- Enhanced preinstall.sh script to handle OpenCV dependencies more reliably
+- Enhanced `preinstall.sh` script to handle OpenCV dependencies more reliably
 - Updated gunicorn configuration for better stability on Render's infrastructure
 
 ### How to Update Your Deployment
@@ -359,6 +359,7 @@ Check that all new Python packages in requirements.txt are properly installed
 ### Notes for Existing Users
 - The update maintains backward compatibility with existing uploaded images
 - Shirt deletion moves files to a backup directory rather than permanent deletion
-- The new theme system remembers user preferences via localStorage
+- The new theme system remembers user preferences via `localStorage`
 - All existing functionality remains unchanged with enhanced UI and additional features
+
 
