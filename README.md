@@ -273,8 +273,20 @@ https://youtu.be/_ib_hZm9ag8?si=CXUdVqTvZUHgNvA7
 ---
 
 ## 📸 Screenshots
+<img width="2256" height="1504" alt="Screenshot (7516)" src="https://github.com/user-attachments/assets/2b9225ac-10c4-4682-a684-17628bd3d0e2" />
+<img width="2256" height="1504" alt="Screenshot (7517)" src="https://github.com/user-attachments/assets/4d30e6bb-9244-47f1-9f8f-856a450571c4" />
+<img width="2256" height="1504" alt="Screenshot (7519)" src="https://github.com/user-attachments/assets/faeb429c-2f76-4274-a971-dac4c98fc179" />
+<img width="2256" height="1504" alt="Screenshot (7520)" src="https://github.com/user-attachments/assets/7411736f-a06a-4b50-8648-c99d3c700b7c" />
+<img width="2256" height="1504" alt="Screenshot (7521)" src="https://github.com/user-attachments/assets/95349b9e-39af-4ea5-9d21-0e76bfb43661" />
+<img width="2256" height="1504" alt="Screenshot (7523)" src="https://github.com/user-attachments/assets/cf35d635-12fd-4c3e-891f-f0dc00800c6f" />
+<img width="2256" height="1504" alt="Screenshot (7525)" src="https://github.com/user-attachments/assets/4f60e76f-dd31-4ed7-ad28-79b15aab5861" />
+<img width="2256" height="1504" alt="Screenshot (7524)" src="https://github.com/user-attachments/assets/37f881be-e191-4daa-bb0c-00079aeb1cf7" />
 
+<img width="2256" height="1504" alt="Screenshot (7511)" src="https://github.com/user-attachments/assets/d39c87b5-c488-4267-ae07-04475c4a9381" />
+<img width="2256" height="1504" alt="Screenshot (7512)" src="https://github.com/user-attachments/assets/c4246856-251a-4dd7-854b-16daeb0bfbca" />
 
+<img width="2256" height="1504" alt="Screenshot (7513)" src="https://github.com/user-attachments/assets/4c4f9456-27fe-4196-90bf-34b42cabe5b1" />
+<img width="2256" height="1504" alt="Screenshot (7514)" src="https://github.com/user-attachments/assets/29b8e7ae-b5b6-4940-a345-6d83df879c0e" />
 
 
 ---
@@ -361,5 +373,6 @@ Check that all new Python packages in requirements.txt are properly installed
 - Shirt deletion moves files to a backup directory rather than permanent deletion
 - The new theme system remembers user preferences via `localStorage`
 - All existing functionality remains unchanged with enhanced UI and additional features
+
 
 
