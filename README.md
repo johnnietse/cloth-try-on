@@ -273,8 +273,14 @@ https://youtu.be/_ib_hZm9ag8?si=CXUdVqTvZUHgNvA7
 ---
 
 ## 📸 Screenshots
-<img width="2256" height="1504" alt="Screenshot (7516)" src="https://github.com/user-attachments/assets/2b9225ac-10c4-4682-a684-17628bd3d0e2" />
-<img width="2256" height="1504" alt="Screenshot (7517)" src="https://github.com/user-attachments/assets/4d30e6bb-9244-47f1-9f8f-856a450571c4" />
+<img width="2256" height="1504" alt="Screenshot (7529)" src="https://github.com/user-attachments/assets/a0c47888-4874-4d73-b328-3da1215c8b1f" />
+
+<img width="2256" height="1504" alt="Screenshot (7530)" src="https://github.com/user-attachments/assets/65d28990-f1e5-4931-887f-77353e29971f" />
+
+<img width="2256" height="1504" alt="Screenshot (7526)" src="https://github.com/user-attachments/assets/235bef01-296f-40ac-a5f3-f5e08de01386" />
+
+<img width="2256" height="1504" alt="Screenshot (7528)" src="https://github.com/user-attachments/assets/ab345ce6-2762-43f2-8f54-7bb7ec7eafaf" />
+
 <img width="2256" height="1504" alt="Screenshot (7519)" src="https://github.com/user-attachments/assets/faeb429c-2f76-4274-a971-dac4c98fc179" />
 <img width="2256" height="1504" alt="Screenshot (7520)" src="https://github.com/user-attachments/assets/7411736f-a06a-4b50-8648-c99d3c700b7c" />
 <img width="2256" height="1504" alt="Screenshot (7521)" src="https://github.com/user-attachments/assets/95349b9e-39af-4ea5-9d21-0e76bfb43661" />
@@ -373,6 +379,7 @@ Check that all new Python packages in requirements.txt are properly installed
 - Shirt deletion moves files to a backup directory rather than permanent deletion
 - The new theme system remembers user preferences via `localStorage`
 - All existing functionality remains unchanged with enhanced UI and additional features
+
 
 
 
