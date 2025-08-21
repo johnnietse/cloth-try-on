@@ -268,15 +268,13 @@ First build will take 5-10 minutes (installs dependencies and runs preinstall.sh
 A short walkthrough of the application is available below.
 
 ▶️ Watch the full demo here:
-https://youtu.be/D6o0jcurhUA
-
+https://youtu.be/_ib_hZm9ag8?si=CXUdVqTvZUHgNvA7
 
 ---
 
 ## 📸 Screenshots
 
-![Screenshot (3616)](https://github.com/user-attachments/assets/0d149714-96fa-4f23-bee0-7f657e9567bd)
-![Screenshot (3617)](https://github.com/user-attachments/assets/325ef83e-ef4a-4542-a53d-c5a38dfb2439)
+
 
 
 ---
@@ -296,3 +294,71 @@ Key differences from this image version:
 Both repositories share the same core technology, but the video version includes additional:
 - Video decoding/encoding pipelines
 - Motion stabilization techniques
+
+---
+
+## Updates to the Virtual Clothing Try-On Web App
+### Major Enhancements
+1. **Complete UI/UX Redesign**
+- **Dark/Light Theme Toggle**: Added theme switcher with persistent preference saving
+- **Modern Card-Based Layout**: Improved visual organization with shadow effects and hover animations
+- **Responsive Design**: Fully mobile-friendly interface with Bootstrap 5 integration
+- **Step Indicators**: Visual progress tracking for better user experience
+- **Enhanced Image Previews**: Real-time preview of uploaded user images
+
+2. **Advanced Shirt Management**
+- **Shirt Upload Interface**: Dedicated card for uploading new shirt designs
+- **Visual Shirt Grid**: Improved selection interface with hover effects
+- **Delete Functionality**: Ability to remove uploaded shirt designs with confirmation modal
+- **Backup System**: Deleted shirts are moved to a backup directory instead of permanent deletion
+
+3. **Style Assistant Integration**
+- **AI-Powered Chatbot**: Integrated Cohere API for fashion advice and recommendations
+- **Conversation History**: Maintains context throughout the styling session
+- **Real-time Interaction**: Instant responses to style-related queries
+
+4. **Social Sharing Features**
+- **Instagram Integration**: Direct sharing to Instagram with automatic caption generation
+- **Download Options**: Enhanced download functionality with proper file naming
+- **Sharing Guide**: Fallback instructions for when direct sharing isn't available
+
+5. **Technical Improvements**
+- **Enhanced Error Handling**: Comprehensive error management with user-friendly messages
+- **Dependency Management**: Version checking and compatibility safeguards
+- **Logging System**: Rotating file logs for better debugging and maintenance
+- **Security Enhancements**: Secure session management and file handling
+- **Health Checks**: Added `/healthz` and `/dependency_check` endpoints
+
+6. **Performance Optimizations**
+- **Gunicorn Configuration**: Updated worker settings for better performance on Render
+- **Preinstall Script**: Fixed OpenCV installation issues with dependency management
+- **Caching Strategies**: Improved static file serving and resource management
+
+### Deployment Updates
+#### Environment Variables Added:
+- `COHERE_API_KEY`: For AI style assistant functionality
+- `FLASK_SECRET_KEY`: For secure session management
+- Instagram API variables (for future expansion)
+
+#### Build Process Improvements:
+- Enhanced preinstall.sh script to handle OpenCV dependencies more reliably
+- Updated gunicorn configuration for better stability on Render's infrastructure
+
+### How to Update Your Deployment
+1. **Update Environment Variables:**
+Add the new required environment variables to your Render configuration:
+- `COHERE_API_KEY` (get from https://cohere.ai/)
+- `FLASK_SECRET_KEY` (generate a random string)
+
+2. **Redeploy Application:**
+Push the updated code to your repository, which will trigger an automatic redeploy on Render
+
+3. **Verify Dependencies:**
+Check that all new Python packages in requirements.txt are properly installed
+
+### Notes for Existing Users
+- The update maintains backward compatibility with existing uploaded images
+- Shirt deletion moves files to a backup directory rather than permanent deletion
+- The new theme system remembers user preferences via localStorage
+- All existing functionality remains unchanged with enhanced UI and additional features
+
