@@ -291,8 +291,6 @@ https://youtu.be/_ib_hZm9ag8?si=CXUdVqTvZUHgNvA7
 
 
 <img width="2256" height="1504" alt="Screenshot (7511) (1)" src="https://github.com/user-attachments/assets/23e2e94c-d5d9-4a7e-8abb-205d5e263cbd" />
-
-<img width="2256" height="1504" alt="Screenshot (7511)" src="https://github.com/user-attachments/assets/d39c87b5-c488-4267-ae07-04475c4a9381" />
 <img width="2256" height="1504" alt="Screenshot (7512)" src="https://github.com/user-attachments/assets/c4246856-251a-4dd7-854b-16daeb0bfbca" />
 
 <img width="2256" height="1504" alt="Screenshot (7513)" src="https://github.com/user-attachments/assets/4c4f9456-27fe-4196-90bf-34b42cabe5b1" />
@@ -383,6 +381,7 @@ Check that all new Python packages in requirements.txt are properly installed
 - Shirt deletion moves files to a backup directory rather than permanent deletion
 - The new theme system remembers user preferences via `localStorage`
 - All existing functionality remains unchanged with enhanced UI and additional features
+
 
 
 
